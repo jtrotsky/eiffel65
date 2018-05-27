@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"./steam"
+	"github.com/jtrotsky/eiffel65/steam"
 )
 
 const (
