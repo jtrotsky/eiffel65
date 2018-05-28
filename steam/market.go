@@ -26,31 +26,15 @@ type MarketListing struct {
 	TotalCount int    `json:"total_count,omitempty"`
 	Start      int    `json:"start,omitempty"`
 
-	ListingInfo map[string]Listing `json:"listinginfo,omitempty"`
-	Assets      map[string]string  `json:"assets,omitempty"`
+	ListingInfo map[string]Listing                     `json:"listinginfo,omitempty"`
+	Assets      map[string]map[string]map[string]Asset `json:"assets,omitempty"`
 }
 
 // Listing contains information specific to the market listing such as its price.
 type Listing struct {
-	ID    string `json:"listingid,omitempty"`
-	Price int64  `json:"price,omitempty"`
-	Fee   int64  `json:"fee,omitempty"`
-
-	// "publisher_fee_app": 730,
-	// "publisher_fee_percent": "0.100000001490116119",
-	// "currencyid": 2001,
-	// "steam_fee": 173,
-	// "publisher_fee": 347,
-	// "converted_price": 2988,
-	// "converted_fee": 447,
-	// "converted_currencyid": 2003,
-	// "converted_steam_fee": 149,
-	// "converted_publisher_fee": 298,
-	// "converted_price_per_unit": 2988,
-	// "converted_fee_per_unit": 447,
-	// "converted_steam_fee_per_unit": 149,
-	// "converted_publisher_fee_per_unit": 298,
-
+	ID    string      `json:"listingid,omitempty"`
+	Price int64       `json:"price,omitempty"`
+	Fee   int64       `json:"fee,omitempty"`
 	Asset MarketAsset `json:"asset,omitempty"`
 }
 
@@ -71,8 +55,8 @@ type MarketAction struct {
 }
 
 // GetMarketListing returns info about an asset listed on the Steam market.
-func GetMarketListing(encodedName string) (*MarketListing, error) {
-	marketListingURL, err := url.Parse(fmt.Sprintf("%s/%s/%s/%s/render", marketBaseURL, pathMarketListing, steamAppID, encodedName))
+func (client *Client) GetMarketListing(encodedName string) (*MarketListing, error) {
+	marketListingURL, err := url.Parse(fmt.Sprintf("%s/%s/%s/%s/render", marketBaseURL, pathMarketListing, csgoAppID, encodedName))
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +67,7 @@ func GetMarketListing(encodedName string) (*MarketListing, error) {
 	params.Add("currency", marketCurrency)
 	params.Add("language", marketLanguage)
 	params.Add("format", marketDataFormat)
-	params.Add("appid", steamAppID)
+	params.Add("appid", csgoAppID)
 	marketListingURL.RawQuery = params.Encode()
 
 	// DEBUG
@@ -101,8 +85,6 @@ func GetMarketListing(encodedName string) (*MarketListing, error) {
 		return nil, err
 	}
 
-	log.Printf("%s", marketListing.Assets)
-
 	return &marketListing, err
 }
 
@@ -117,7 +99,7 @@ func (asset *SimpleAsset) GetPriceSummary() error {
 	params.Add("format", marketDataFormat)
 	params.Add("country", marketCountry)
 	params.Add("currency", marketCurrency)
-	params.Add("appid", steamAppID)
+	params.Add("appid", csgoAppID)
 	assetPriceURL.RawQuery = params.Encode()
 
 	assetPriceURL.RawQuery += fmt.Sprintf("&market_hash_name=%s", url.PathEscape(asset.EncodedName))
