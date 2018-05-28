@@ -2,7 +2,8 @@
 
 ![](https://media.giphy.com/media/ZjvXBux7Lq0iA/giphy.gif)
 
-Looks up case-hardened skins on the Steam Community Market for Counter Strike: Global Offensive.
+Looks up case-hardened skins on the Steam market for Counter Strike: Global Offensive.
+By default it will look up the AK-47 Case Hardened.
 
 ### Command Line Flags
 ```
