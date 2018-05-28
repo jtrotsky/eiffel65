@@ -102,7 +102,7 @@ func (asset *SimpleAsset) GetPriceSummary() error {
 	params.Add("appid", csgoAppID)
 	assetPriceURL.RawQuery = params.Encode()
 
-	assetPriceURL.RawQuery += fmt.Sprintf("&market_hash_name=%s", url.PathEscape(asset.EncodedName))
+	assetPriceURL.RawQuery += fmt.Sprintf("&market_hash_name=%s", asset.EncodedName)
 
 	// DEBUG
 	log.Println(assetPriceURL)
@@ -117,15 +117,15 @@ func (asset *SimpleAsset) GetPriceSummary() error {
 		return errors.New("failed to get asset price summary")
 	}
 
-	err = json.NewDecoder(response.Body).Decode(&asset.Price.Summary)
+	err = json.NewDecoder(response.Body).Decode(&asset.MarketValue)
 	if err != nil {
 		return err
 	}
 
 	if marketCurrency == "1" {
-		asset.Price.Summary.Currency = "USD"
+		asset.MarketValue.Currency = "USD"
 	} else {
-		asset.Price.Summary.Currency = "?"
+		asset.MarketValue.Currency = "?"
 	}
 
 	return err
