@@ -52,24 +52,26 @@ type AssetPayloadResult struct {
 
 // Asset is an item on the Steam market.
 type Asset struct {
-	Name              string                 `json:"name,omitempty"`
-	Type              string                 `json:"type,omitempty"`
-	IconURL           string                 `json:"icon_url,omitempty"` // Prefaced by http://cdn.steamcommunity.com/economy/image/
-	IconURLLarge      string                 `json:"icon_url_large,omitempty"`
-	IconDragURL       string                 `json:"icon_drag_url,omitempty"`
-	MarketHashName    string                 `json:"market_hash_name,omitempty"`
-	MarketName        string                 `json:"market_name,omitempty"`
-	NameColor         string                 `json:"name_color,omitempty"`
-	BGColor           string                 `json:"background_color,omitempty"`
-	Tradable          string                 `json:"tradable,omitempty"`
-	Marketable        string                 `json:"marketable,omitempty"`
-	Commodity         string                 `json:"commodity,omitempty"`
-	TradeRestrict     string                 `json:"market_tradeable_restriction,omitempty"`
-	FraudWarnings     string                 `json:"fraudwarnings,omitempty"`
-	Descriptions      map[string]Description `json:"descriptions,omitempty"`
-	OwnerDescriptions string                 `json:"owner_descriptions,omitempty"`
-	Tags              map[string]Tag         `json:"tags,omitempty"`
-	ClassID           string                 `json:"classid,omitempty"`
+	ID                string        `json:"id,omitempty"`
+	ClassID           string        `json:"classid,omitempty"`
+	ContextID         string        `json:"contextid,omitempty"`
+	Name              string        `json:"name,omitempty"`
+	Type              string        `json:"type,omitempty"`
+	IconURL           string        `json:"icon_url,omitempty"`       // Prefaced by CDN URL.
+	IconURLLarge      string        `json:"icon_url_large,omitempty"` // Prefaced by CDN URL.
+	IconDragURL       string        `json:"icon_drag_url,omitempty"`  // Prefaced by CDN URL.
+	MarketHashName    string        `json:"market_hash_name,omitempty"`
+	MarketName        string        `json:"market_name,omitempty"`
+	NameColor         string        `json:"name_color,omitempty"`
+	BGColor           string        `json:"background_color,omitempty"`
+	Tradable          int           `json:"tradable,omitempty"`
+	Marketable        int           `json:"marketable,omitempty"`
+	Commodity         int           `json:"commodity,omitempty"`
+	TradeRestrict     int           `json:"market_tradeable_restriction,omitempty"`
+	FraudWarnings     string        `json:"fraudwarnings,omitempty"`
+	Descriptions      []Description `json:"descriptions,omitempty"`
+	OwnerDescriptions string        `json:"owner_descriptions,omitempty"`
+	Tags              []Tag         `json:"tags,omitempty"`
 }
 
 // Description contains asset description data
@@ -91,8 +93,12 @@ type Tag struct {
 
 // SimpleAsset is a simple version of Asset.
 type SimpleAsset struct {
+	ID          string       `json:"id,omitempty"`
+	ClassID     string       `json:"class_id,omitempty"`
+	ContextID   string       `json:"context_id,omitempty"`
 	Name        string       `json:"name,omitempty"`
 	EncodedName string       `json:"encoded_name,omitempty"`
+	IconURL     string       `json:"icon_url,omitempty"`
 	Type        AssetType    `json:"type,omitempty"`
 	Price       AssetPrice   `json:"price,omitempty"`
 	Quality     AssetQuality `json:"quality,omitempty"`
@@ -101,6 +107,7 @@ type SimpleAsset struct {
 // AssetQuality is the weapon condition and rarity.
 type AssetQuality struct {
 	Wear AssetWear `json:"wear,omitempty"`
+	Type string    `json:"type,omitempty"`
 }
 
 // AssetPrice contains asset price statistics.
@@ -120,22 +127,56 @@ type AssetPriceSummary struct {
 }
 
 // NewAsset creates an asset instance.
-func NewAsset(name string, wearTier int, isStatTrak bool) *SimpleAsset {
+func (client *Client) NewAsset(name string, wearTier int, isStatTrak bool) *SimpleAsset {
 	wear := getWearTierName(wearTier)
 	marketName := formatMarketName(name, wear, isStatTrak)
 
-	return &SimpleAsset{
+	simpleAsset := SimpleAsset{
 		Name:        marketName,
 		EncodedName: url.PathEscape(marketName),
+		Type:        weaponAsset,
 		Quality: AssetQuality{
 			Wear: wear,
 		},
 	}
+
+	marketListing, err := client.GetMarketListing(simpleAsset.EncodedName)
+	if err != nil {
+		log.Fatalf("failed get market listing: %s", err)
+	}
+
+	// Get unknown ClassID from market listing.
+	classID := ""
+	for k := range marketListing.Assets[client.CSGOAppID]["2"] {
+		classID = k
+	}
+
+	// assetInfo, err := client.GetAsset(classID)
+	// if err != nil {
+	// 	log.Fatalf("failed get asset info: %s", err)
+	// }
+
+	// err = simpleAsset.GetPriceSummary()
+	// if err != nil {
+	// 	log.Fatalf("failed get price summary: %s", err)
+	// }
+
+	simpleAsset.ID = marketListing.Assets[client.CSGOAppID]["2"][classID].ID
+	simpleAsset.ClassID = classID
+	simpleAsset.ContextID = marketListing.Assets[client.CSGOAppID]["2"][classID].ContextID
+	simpleAsset.Quality.Type = marketListing.Assets[client.CSGOAppID]["2"][classID].Type
+	// simpleAsset.Price.Summary.Volume = marketListing.Assets[client.CSGOAppID]["2"][classID].
+
+	if marketListing.Assets[client.CSGOAppID]["2"][classID].IconURLLarge != "" {
+		simpleAsset.IconURL += fmt.Sprintf(client.CDNBaseURL + marketListing.Assets[client.CSGOAppID]["2"][classID].IconURLLarge)
+	}
+
+	return &simpleAsset
 }
 
 // ListAssets prints assets in a list.
-func ListAssets(apiKey string) error {
-	assetPayload, err := getAssetPrices(apiKey)
+func (client *Client) ListAssets(apiKey string) error {
+	assetPayload, err := client.getAssetPrices()
 	if err != nil {
 		return err
 	}
@@ -145,7 +186,7 @@ func ListAssets(apiKey string) error {
 	for _, assetPrice := range assetPayload.Result.Assets {
 		log.Printf("getting: %s", assetPrice.ClassID)
 
-		asset, err := GetAsset(apiKey, assetPrice.ClassID)
+		asset, err := client.GetAsset(assetPrice.ClassID)
 		if err != nil {
 			log.Println(err)
 		}
@@ -180,7 +221,7 @@ func ListAssets(apiKey string) error {
 }
 
 // getAssetPrices returns a list of asset prices for a given AppId.
-func getAssetPrices(steamAPIKey string) (*AssetPayload, error) {
+func (client *Client) getAssetPrices() (*AssetPayload, error) {
 	assetPricesURL, err := url.Parse(fmt.Sprintf("%s/%s", steamAPIBaseURL, pathAssetPrices))
 	if err != nil {
 		return nil, err
@@ -189,8 +230,8 @@ func getAssetPrices(steamAPIKey string) (*AssetPayload, error) {
 	params := url.Values{}
 	params.Add("currency", marketCurrency)
 	params.Add("language", marketLanguage)
-	params.Add("appid", steamAppID)
-	params.Add("key", steamAPIKey)
+	params.Add("appid", csgoAppID)
+	params.Add("key", client.APIKey)
 	assetPricesURL.RawQuery = params.Encode()
 
 	response, err := http.DefaultClient.Get(assetPricesURL.String())
@@ -213,7 +254,7 @@ func getAssetPrices(steamAPIKey string) (*AssetPayload, error) {
 }
 
 // GetAsset returns information about an individual item from the Steam market.
-func GetAsset(apiKey, classID string) (*Asset, error) {
+func (client *Client) GetAsset(classID string) (*Asset, error) {
 	assetInfoURL, err := url.Parse(fmt.Sprintf("%s/%s", steamAPIBaseURL, pathAssetInfo))
 	if err != nil {
 		return nil, err
@@ -223,9 +264,11 @@ func GetAsset(apiKey, classID string) (*Asset, error) {
 	// params.Add("instanceid0", instanceid) // Optional
 	params.Add("class_count", "1") // Number of classes specified.
 	params.Add("classid0", classID)
-	params.Add("appid", steamAppID)
-	params.Add("key", apiKey)
+	params.Add("appid", csgoAppID)
+	params.Add("key", client.APIKey)
 	assetInfoURL.RawQuery = params.Encode()
+
+	log.Println(assetInfoURL)
 
 	response, err := http.DefaultClient.Get(assetInfoURL.String())
 	if err != nil {

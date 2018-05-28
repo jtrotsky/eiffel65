@@ -38,27 +38,13 @@ func main() {
 		log.Fatal("please specify a wear tear between 1 and 5")
 	}
 
-	asset := steam.NewAsset(assetName, wearTier, statTrak)
+	steamClient := steam.NewClient(steamAPIKey)
 
-	marketListing, err := steam.GetMarketListing(asset.EncodedName)
-	if err != nil {
-		log.Fatalf("failed get market listing: %s", err)
-	}
-
-	// asset, err := steam.GetAsset()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	marketListingJSON, err := json.MarshalIndent(marketListing, "", "\t")
+	asset := steamClient.NewAsset(assetName, wearTier, statTrak)
+	assetJSON, err := json.MarshalIndent(asset, "", "\t")
 	if err != nil {
 		log.Fatalf("failed to marshal listing JSON: %s", err)
 	}
 
-	fmt.Printf("%s\n", marketListingJSON)
-
-	// err := steam.ListAssets()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	fmt.Printf("%s\n", assetJSON)
 }
