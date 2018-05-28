@@ -41,6 +41,11 @@ func main() {
 	steamClient := steam.NewClient(steamAPIKey)
 
 	asset := steamClient.NewAsset(assetName, wearTier, statTrak)
+
+	if asset == nil {
+		log.Fatalf("No results for %s", assetName)
+	}
+
 	assetJSON, err := json.MarshalIndent(asset, "", "\t")
 	if err != nil {
 		log.Fatalf("failed to marshal listing JSON: %s", err)
