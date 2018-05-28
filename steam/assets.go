@@ -131,37 +131,21 @@ type AssetFloatPayload struct {
 
 // AssetFloat contains readings of the asset quality and appearance.
 type AssetFloat struct {
-	AccountID string `json:"accountid,omitempty"`
-	// "itemid": {
-	// 	"low": -1829587929,
-	// 	"high": 1,
-	// 	"unsigned": true
-	// },
-	DefIndex   int   `json:"defindex,omitempty"`
-	PaintIndex int   `json:"paintindex,omitempty"`
-	Rarity     int   `json:"rarity,omitempty"`
-	Quality    int   `json:"quality,omitempty"`
-	PaintWear  int64 `json:"paintwear,omitempty"`
-	PaintSeed  int64 `json:"paintseed,omitempty"`
-	// "killeaterscoretype": 0,
-	// "killeatervalue": 0,
-	// "customname": null,
-	Stickers  []Sticker `json:"stickers,omitempty"`
-	Inventory int       `json:"inventory,omitempty"`
-	Origin    int       `json:"origin,omitempty"`
-	// "questid": null,
-	// "dropreason": null,
-	FloatValue float64 `json:"floatvalue,omitempty"`
-	ItemID     int64   `json:"itemid_int,omitempty"`
-	// "s": "0",
-	// "a": "6760346663",
-	// "d": "30614827701953021",
-	// "m": "625254122282020305",
-	// "imageurl": "http://media.steampowered.com/apps/730/icons/econ/default_generated/weapon_ak47_cu_ak47_cobra_light_large.7494bfdf4855fd4e6a2dbd983ed0a243c80ef830.png",
-	// "min": 0.1,
-	// "max": 0.7,
-	WeaponType string `json:"weapon_type,omitempty"`
-	ItemName   string `json:"item_name,omitempty"`
+	AccountID  string    `json:"accountid,omitempty"`
+	DefIndex   int       `json:"defindex,omitempty"`
+	PaintIndex int       `json:"paintindex,omitempty"`
+	Rarity     int       `json:"rarity,omitempty"`
+	Quality    int       `json:"quality,omitempty"`
+	PaintWear  int64     `json:"paintwear,omitempty"`
+	PaintSeed  int64     `json:"paintseed,omitempty"`
+	CustomName string    `json:"customname,omitempty"`
+	Stickers   []Sticker `json:"stickers,omitempty"`
+	Inventory  int       `json:"inventory,omitempty"`
+	Origin     int       `json:"origin,omitempty"`
+	FloatValue float64   `json:"floatvalue,omitempty"`
+	ItemID     int64     `json:"itemid_int,omitempty"`
+	WeaponType string    `json:"weapon_type,omitempty"`
+	ItemName   string    `json:"item_name,omitempty"`
 }
 
 // Sticker is an asset that can be attached to CSGO weapons.
@@ -199,11 +183,6 @@ func (client *Client) NewAsset(name string, wearTier int, isStatTrak bool) *Simp
 	for k := range marketListing.Assets[client.CSGOAppID]["2"] {
 		classID = k
 	}
-
-	// assetInfo, err := client.GetAsset(classID)
-	// if err != nil {
-	// 	log.Fatalf("failed get asset info: %s", err)
-	// }
 
 	err = simpleAsset.GetPriceSummary()
 	if err != nil {
