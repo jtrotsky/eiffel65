@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/jtrotsky/eiffel65/util"
 )
@@ -60,12 +62,35 @@ func GetScreenshot(inspectURL string) (string, error) {
 		return "", err
 	}
 
-	screenshotLink, err := lookupScreenshotJob(screenshotPayload.Result.ID)
-	if err != nil {
-		return "", err
+	// Lookup the job to get the screenshot, return the link immediately if it
+	// is present. If the screenshot is cached it will likely take more than
+	// a few seconds to retrieve it.
+	screenshotLink := ""
+	for i := 0; i < 5; i++ {
+		screenshotLink, err = lookupScreenshotJob(screenshotPayload.Result.ID)
+		if err != nil {
+			return "", err
+		}
+
+		if screenshotLink != "" {
+			break
+		} else {
+			time.Sleep(time.Duration(backOffDuration(i)))
+		}
 	}
 
 	return screenshotLink, nil
+}
+
+// backOffDuration calculates a time duration to exponentially increase intervals
+// between requests, so that we are nice to the free APIs that are serving our
+// requests.
+func backOffDuration(attempt int) time.Duration {
+	if attempt <= 0 {
+		attempt = 1
+	}
+	seconds := math.Pow(float64(attempt), 3.5) + 5
+	return time.Second * time.Duration(seconds)
 }
 
 // lookupScreenshotJob looks up a screenshot based on the ID that was returned

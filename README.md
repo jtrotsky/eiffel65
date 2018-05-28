@@ -13,57 +13,56 @@ Looks up case-hardened skins on the Steam Community Market for Counter Strike: G
 ```
 
 #### Example Command
-`./eiffel65 -k <your-steam-api-key> -w 2`
+`./eiffel65 -k <your-steam-api-key> -w 4`
 
 ### Example Response
 ```
 {
-    "id": "14516089565",
-    "class_id": "14516089565",
-    "context_id": "2",
-    "instance_id": "188530139",
-    "name": "AK-47 | Case Hardened (Minimal Wear)",
-    "encoded_name": "AK-47%20%7C%20Case%20Hardened%20%28Minimal%20Wear%29",
-    "icon_url": "https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpot7HxfDhhwszHeDFH6OO6nYeDg8j4MqnWkyUIusYpjriToImhjQHg_EZkN2r0cY-RdAI3Z1jT-gS3kO_njZW_7pjB1zI97T2FIK3X",
-    "inspect_url": "steam://rungame/730/76561202255233023/+csgo_econ_action_preview%20M1929109707517347231A14516089565D14420669795467175295",
-    "type": "weapon",
-    "market_value": {
-        "currency": "USD",
-        "lowest_price": "$30.44",
-        "median_price": "$30.39",
-        "volume": "26"
-    },
-    "quality": {
-        "wear": "Minimal Wear",
-        "type": "Classified Rifle"
-    },
-    "float": {
-        "defindex": 7,
-        "paintindex": 44,
-        "rarity": 5,
-        "quality": 4,
-        "paintwear": 1035673737,
-        "paintseed": 477,
-        "stickers": [
-            {
-                "slot": 1,
-                "sticker_id": 2472,
-                "codename": "boston2018_team_c9",
-                "name": "Cloud9 | Boston 2018"
-            },
-            {
-                "slot": 3,
-                "sticker_id": 2472,
-                "codename": "boston2018_team_c9",
-                "name": "Cloud9 | Boston 2018"
-            }
-        ],
-        "inventory": 3221225482,
-        "origin": 8,
-        "floatvalue": 0.09137064963579178,
-        "itemid_int": 14516089565,
-        "weapon_type": "AK-47",
-        "item_name": "Case Hardened"
-    }
+	"id": "14514261975",
+	"class_id": "14514261975",
+	"context_id": "2",
+	"instance_id": "188530139",
+	"name": "AK-47 | Case Hardened (Well-Worn)",
+	"encoded_name": "AK-47%20%7C%20Case%20Hardened%20%28Well-Worn%29",
+	"inspect_url": "steam://rungame/730/76561202255233023/+csgo_econ_action_preview%20M1930235607424827122A14514261975D11962722264411186581",
+	"screenshot_url": "https://s.metjm.net/rZXWhox.jpg",
+	"type": "weapon",
+	"market_value": {
+		"currency": "USD",
+		"lowest_price": "$22.84",
+		"median_price": "$22.73",
+		"volume": "16"
+	},
+	"quality": {
+		"wear": "Well-Worn",
+		"type": "Classified Rifle"
+	},
+	"float": {
+		"defindex": 7,
+		"paintindex": 44,
+		"rarity": 5,
+		"quality": 4,
+		"paintwear": 1054644235,
+		"paintseed": 500,
+		"stickers": [
+			{
+				"sticker_id": 154,
+				"codename": "cologne2014_esl_a",
+				"name": "ESL One Cologne 2014 (Blue)"
+			},
+			{
+				"slot": 1,
+				"sticker_id": 371,
+				"codename": "chi_bomb",
+				"name": "Chi Bomb"
+			}
+		],
+		"inventory": 3221225475,
+		"origin": 8,
+		"floatvalue": 0.43084749579429626,
+		"itemid_int": 14514261975,
+		"weapon_type": "AK-47",
+		"item_name": "Case Hardened"
+	}
 }
 ```
