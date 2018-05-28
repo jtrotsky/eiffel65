@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	isStatTrak bool = false
+	statTrak string = "StatTrak™"
 
 	factoryNew   AssetWear = "Factory New"
 	minimalWear  AssetWear = "Minimal Wear"
@@ -120,11 +120,16 @@ type AssetPriceSummary struct {
 }
 
 // NewAsset creates an asset instance.
-func NewAsset(name string) *SimpleAsset {
-	// Name: "StatTrak\u2122 AK-47 | Blue Laminate (Factory New)",
+func NewAsset(name string, wearTier int, isStatTrak bool) *SimpleAsset {
+	wear := getWearTierName(wearTier)
+	marketName := formatMarketName(name, wear, isStatTrak)
+
 	return &SimpleAsset{
-		Name:        name,
-		EncodedName: url.PathEscape(name),
+		Name:        marketName,
+		EncodedName: url.PathEscape(marketName),
+		Quality: AssetQuality{
+			Wear: wear,
+		},
 	}
 }
 
@@ -258,6 +263,36 @@ func GetAsset(apiKey, classID string) (*Asset, error) {
 	}
 
 	return nil, err
+}
+
+// getWearTierName identifies the wear quality category of an asset.
+func getWearTierName(wearTier int) AssetWear {
+	var wear AssetWear
+	switch wearTier {
+	case 1:
+		wear = factoryNew
+	case 2:
+		wear = minimalWear
+	case 3:
+		wear = fieldTested
+	case 4:
+		wear = wellWorn
+	case 5:
+		wear = battleScared
+	}
+	return wear
+}
+
+// formatMarketName creates the Steam market-searchable name for an asset.
+func formatMarketName(baseName string, wear AssetWear, isStatTrak bool) string {
+	// StatTrak™ AK-47 | Case Hardened (Field-Tested)
+	marketName := ""
+	if isStatTrak {
+		marketName = statTrak + " "
+	}
+
+	marketName += baseName + " " + "(" + string(wear) + ")"
+	return marketName
 }
 
 // Transform converts a raw Steam asset into a simplified one.
