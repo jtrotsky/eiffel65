@@ -26,8 +26,8 @@ type MarketListing struct {
 	TotalCount int    `json:"total_count,omitempty"`
 	Start      int    `json:"start,omitempty"`
 
-	ListingInfo map[string]Listing     `json:"listinginfo,omitempty"`
-	Assets      map[string]interface{} `json:"assets,omitempty"`
+	ListingInfo map[string]Listing `json:"listinginfo,omitempty"`
+	Assets      map[string]string  `json:"assets,omitempty"`
 }
 
 // Listing contains information specific to the market listing such as its price.
@@ -101,15 +101,7 @@ func GetMarketListing(encodedName string) (*MarketListing, error) {
 		return nil, err
 	}
 
-	type AssetListing struct {
-		AssetListing map[string]Asset
-	}
-	type ListingPayload struct {
-		ListingPayload map[string]AssetListing
-	}
-
-	listingPayload := marketListing.Assets[steamAppID].(ListingPayload)
-	log.Printf("%s", listingPayload)
+	log.Printf("%s", marketListing.Assets)
 
 	return &marketListing, err
 }
