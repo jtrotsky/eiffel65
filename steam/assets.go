@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/jtrotsky/eiffel65/float"
+	"github.com/jtrotsky/eiffel65/image"
 )
 
 const (
@@ -70,7 +73,7 @@ type Asset struct {
 	Marketable        int            `json:"marketable,omitempty"`
 	Commodity         int            `json:"commodity,omitempty"`
 	TradeRestrict     int            `json:"market_tradeable_restriction,omitempty"`
-	FraudWarnings     string         `json:"fraudwarnings,omitempty"`
+	FraudWarnings     []string       `json:"fraudwarnings,omitempty"`
 	OwnerDescriptions string         `json:"owner_descriptions,omitempty"`
 	MarketActions     []MarketAction `json:"market_actions,omitempty"`
 	Descriptions      []Description  `json:"descriptions,omitempty"`
@@ -96,18 +99,19 @@ type Tag struct {
 
 // SimpleAsset is a simple version of Asset.
 type SimpleAsset struct {
-	ID          string       `json:"id,omitempty"`
-	ClassID     string       `json:"class_id,omitempty"`
-	ContextID   string       `json:"context_id,omitempty"`
-	InstanceID  string       `json:"instance_id,omitempty"`
-	Name        string       `json:"name,omitempty"`
-	EncodedName string       `json:"encoded_name,omitempty"`
-	IconURL     string       `json:"icon_url,omitempty"`
-	InspectURL  string       `json:"inspect_url,omitempty"`
-	Type        AssetType    `json:"type,omitempty"`
-	MarketValue AssetValue   `json:"market_value,omitempty"`
-	Quality     AssetQuality `json:"quality,omitempty"`
-	Float       AssetFloat   `json:"float,omitempty"`
+	ID            string           `json:"id,omitempty"`
+	ClassID       string           `json:"class_id,omitempty"`
+	ContextID     string           `json:"context_id,omitempty"`
+	InstanceID    string           `json:"instance_id,omitempty"`
+	Name          string           `json:"name,omitempty"`
+	EncodedName   string           `json:"encoded_name,omitempty"`
+	IconURL       string           `json:"icon_url,omitempty"`
+	InspectURL    string           `json:"inspect_url,omitempty"`
+	ScreenshotURL string           `json:"screenshot_url,omitempty"`
+	Type          AssetType        `json:"type,omitempty"`
+	MarketValue   AssetValue       `json:"market_value,omitempty"`
+	Quality       AssetQuality     `json:"quality,omitempty"`
+	Float         float.AssetFloat `json:"float,omitempty"`
 }
 
 // AssetQuality is the weapon condition and rarity.
@@ -122,41 +126,6 @@ type AssetValue struct {
 	LowestPrice string `json:"lowest_price,omitempty"`
 	MedianPrice string `json:"median_price,omitempty"`
 	Volume      string `json:"volume,omitempty"`
-}
-
-// AssetFloatPayload contains the payload of data on asset quality and appearance.
-type AssetFloatPayload struct {
-	ItemInfo AssetFloat `json:"iteminfo,omitempty"`
-}
-
-// AssetFloat contains readings of the asset quality and appearance.
-type AssetFloat struct {
-	AccountID  string    `json:"accountid,omitempty"`
-	DefIndex   int       `json:"defindex,omitempty"`
-	PaintIndex int       `json:"paintindex,omitempty"`
-	Rarity     int       `json:"rarity,omitempty"`
-	Quality    int       `json:"quality,omitempty"`
-	PaintWear  int64     `json:"paintwear,omitempty"`
-	PaintSeed  int64     `json:"paintseed,omitempty"`
-	CustomName string    `json:"customname,omitempty"`
-	Stickers   []Sticker `json:"stickers,omitempty"`
-	Inventory  int       `json:"inventory,omitempty"`
-	Origin     int       `json:"origin,omitempty"`
-	FloatValue float64   `json:"floatvalue,omitempty"`
-	ItemID     int64     `json:"itemid_int,omitempty"`
-	WeaponType string    `json:"weapon_type,omitempty"`
-	ItemName   string    `json:"item_name,omitempty"`
-}
-
-// Sticker is an asset that can be attached to CSGO weapons.
-type Sticker struct {
-	Slot      int     `json:"slot,omitempty"`
-	StickerID int64   `json:"sticker_id,omitempty"`
-	Wear      float64 `json:"wear,omitempty"`
-	Scale     float64 `json:"scale,omitempty"`
-	Rotation  float64 `json:"rotation,omitempty"`
-	CodeName  string  `json:"codename,omitempty"`
-	Name      string  `json:"name,omitempty"`
 }
 
 // NewAsset creates an asset instance.
@@ -206,12 +175,19 @@ func (client *Client) NewAsset(name string, wearTier int, isStatTrak bool) *Simp
 	}
 
 	if simpleAsset.InspectURL != "" {
-		assetFloat, err := client.getAssetFloat(simpleAsset.InspectURL)
+		assetFloat, err := float.Get(simpleAsset.InspectURL)
 		if err != nil {
 			log.Fatalf("failed get price summary: %s", err)
 		}
 
 		simpleAsset.Float = assetFloat.ItemInfo
+
+		screenshotURL, err := image.GetScreenshot(simpleAsset.InspectURL)
+		if err != nil {
+			log.Fatalf("failed to get screenshot: %s", err)
+		}
+
+		simpleAsset.ScreenshotURL = screenshotURL
 	}
 
 	return &simpleAsset
@@ -363,30 +339,6 @@ func (asset *Asset) Transform() (*SimpleAsset, error) {
 	}
 
 	return &assetSimple, err
-}
-
-// getAssetFloat looks up the asset paint/design quality.
-func (client *Client) getAssetFloat(inspectURL string) (*AssetFloatPayload, error) {
-	csgoFloatURL, err := url.Parse(fmt.Sprintf("%s?url=%s", client.CSGOFloatBaseURL, inspectURL))
-	if err != nil {
-		return nil, err
-	}
-
-	log.Println(csgoFloatURL)
-
-	response, err := http.DefaultClient.Get(csgoFloatURL.String())
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
-
-	assetFloatPayload := AssetFloatPayload{}
-	err = json.NewDecoder(response.Body).Decode(&assetFloatPayload)
-	if err != nil {
-		return nil, err
-	}
-
-	return &assetFloatPayload, nil
 }
 
 // parseInspectURL takes a raw inspect URL and converts it to one that can be
