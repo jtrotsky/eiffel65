@@ -144,7 +144,15 @@ func (client *Client) NewAsset(name string, wearTier int, isStatTrak bool) *Simp
 
 	marketListing, err := client.GetMarketListing(simpleAsset.EncodedName)
 	if err != nil {
-		log.Fatalf("failed get market listing: %s", err)
+		return nil
+	}
+
+	if len(marketListing.Assets) == 0 {
+		return nil
+	}
+
+	if len(marketListing.ListingInfo) == 0 {
+		return nil
 	}
 
 	// Get unknown ClassID from market listing.
