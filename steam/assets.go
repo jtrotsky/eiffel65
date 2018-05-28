@@ -170,9 +170,10 @@ func (client *Client) NewAsset(name string, wearTier int, isStatTrak bool) *Simp
 		}
 	}
 
-	if marketListing.Assets[client.CSGOAppID]["2"][classID].IconURLLarge != "" {
-		simpleAsset.IconURL += fmt.Sprintf(client.CDNBaseURL + marketListing.Assets[client.CSGOAppID]["2"][classID].IconURLLarge)
-	}
+	// icon_url not useful if screenshot image included.
+	// if marketListing.Assets[client.CSGOAppID]["2"][classID].IconURLLarge != "" {
+	// 	simpleAsset.IconURL += fmt.Sprintf(client.CDNBaseURL + marketListing.Assets[client.CSGOAppID]["2"][classID].IconURLLarge)
+	// }
 
 	if simpleAsset.InspectURL != "" {
 		assetFloat, err := float.Get(simpleAsset.InspectURL)
