@@ -25,7 +25,7 @@ type AssetFloat struct {
 	Rarity     int       `json:"rarity,omitempty"`
 	Quality    int       `json:"quality,omitempty"`
 	PaintWear  int64     `json:"paintwear,omitempty"`
-	PaintSeed  int64     `json:"paintseed,omitempty"`
+	PaintSeed  int       `json:"paintseed,omitempty"`
 	CustomName string    `json:"customname,omitempty"`
 	Stickers   []Sticker `json:"stickers,omitempty"`
 	Inventory  int       `json:"inventory,omitempty"`

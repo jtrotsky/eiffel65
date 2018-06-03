@@ -15,10 +15,13 @@ const (
 )
 
 var (
-	assetName   string
-	steamAPIKey string
-	wearTier    int
-	statTrak    bool
+	assetName    string
+	steamAPIKey  string
+	wearTier     int
+	statTrak     bool
+	includePrice bool
+	includeImage bool
+	includeFloat bool
 )
 
 func init() {
@@ -26,6 +29,9 @@ func init() {
 	flag.StringVar(&steamAPIKey, "k", "", "the user Steam Web API Key")
 	flag.IntVar(&wearTier, "w", defaultWearTier, "what wear quality to query")
 	flag.BoolVar(&statTrak, "s", false, "whether to query items with StatTrak")
+	flag.BoolVar(&includePrice, "p", false, "whether to a market price summary")
+	flag.BoolVar(&includeImage, "i", false, "whether to include an image URL from metjm")
+	flag.BoolVar(&includeFloat, "f", false, "whether to include float info from csgofloat.com")
 	flag.Parse()
 }
 
@@ -40,16 +46,27 @@ func main() {
 
 	steamClient := steam.NewClient(steamAPIKey)
 
-	asset := steamClient.NewAsset(assetName, wearTier, statTrak)
+	assetList, err := steamClient.NewAsset(assetName, wearTier, statTrak, includePrice, includeImage, includeFloat)
+	if err != nil {
+		log.Fatalf("Failed to get asset listings %s", err)
+	}
 
-	if asset == nil {
+	if assetList == nil {
 		log.Fatalf("No results for %s", assetName)
 	}
 
-	assetJSON, err := json.MarshalIndent(asset, "", "\t")
+	assetJSON, err := json.MarshalIndent(assetList, "", "\t")
 	if err != nil {
 		log.Fatalf("failed to marshal listing JSON: %s", err)
 	}
 
-	fmt.Printf("%s\n", assetJSON)
+	notableIDs := steam.CheckForRarity(*assetList)
+	highlight := ""
+	if len(notableIDs) > 0 {
+		for _, id := range notableIDs {
+			highlight += fmt.Sprintf("\nHIGHLIGHT: %s", id)
+		}
+	}
+
+	fmt.Printf("%s\n\n%s", assetJSON, highlight)
 }
