@@ -11,6 +11,9 @@ By default it will look up the AK-47 Case Hardened.
 -w The Weapon Wear (1-5 Battle-Scarred to Factory New, default 3) 
 -s StatTrak or not (Default not)
 -n The name of another item (default "AK-47 | Case Hardened")
+-p Include average Steam Market pricing for this asset in the payload.
+-i Include an image of this asset in the payload from metjm.
+-f Include float values for this asset in the payload from csgofloat.
 ```
 
 #### Example Command
