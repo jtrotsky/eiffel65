@@ -7,14 +7,17 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 const (
-	marketBaseURL    string = "https://steamcommunity.com"
-	marketLanguage   string = "en_US"
-	marketCountry    string = "us"
-	marketCurrency   string = "1" // USD (https://github.com/SteamRE/SteamKit/blob/master/Resources/SteamLanguage/enums.steamd#L855).
-	marketDataFormat string = "json"
+	marketBaseURL       string = "https://steamcommunity.com"
+	marketLanguage      string = "en_US"
+	marketCountry       string = "us"
+	marketCurrency      string = "1" // USD (https://github.com/SteamRE/SteamKit/blob/master/Resources/SteamLanguage/enums.steamd#L855).
+	marketDataFormat    string = "json"
+	marketPageSize      int    = 25
+	marketStartingIndex int    = 0
 
 	pathPriceOverview string = "market/priceoverview"
 	pathMarketListing string = "market/listings"
@@ -62,8 +65,8 @@ func (client *Client) GetMarketListing(encodedName string) (*MarketListing, erro
 	}
 
 	params := url.Values{}
-	params.Add("start", "0") // consts
-	params.Add("count", "1") // consts
+	params.Add("start", strconv.Itoa(marketStartingIndex))
+	params.Add("count", strconv.Itoa(marketPageSize))
 	params.Add("currency", marketCurrency)
 	params.Add("language", marketLanguage)
 	params.Add("format", marketDataFormat)

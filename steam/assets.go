@@ -35,6 +35,17 @@ const (
 	pathAssetPrices string = "ISteamEconomy/GetAssetPrices/v1"
 )
 
+// Mostly from https://steamcommunity.com/sharedfiles/filedetails/?id=380042859
+// Examples
+// https://files.opskins.media/file/opskins-patternindex/7_44_29.jpg
+// https://files.opskins.media/file/opskins-patternindex/7_44_151.jpg
+// https://files.opskins.media/file/opskins-patternindex/7_44_179.jpg
+// https://files.opskins.media/file/opskins-patternindex/7_44_321.jpg
+//
+// Blue magazine
+// https://files.opskins.media/file/opskins-patternindex/7_44_464.jpg
+var rarePaintSeeds = []int{29, 151, 179, 321, 464, 561, 661, 670, 760, 955}
+
 // AssetWear is how assets are categorised by quality based on their
 // appearance.
 type AssetWear string
@@ -129,7 +140,7 @@ type AssetValue struct {
 }
 
 // NewAsset creates an asset instance.
-func (client *Client) NewAsset(name string, wearTier int, isStatTrak bool) *SimpleAsset {
+func (client *Client) NewAsset(name string, wearTier int, isStatTrak, includePrice, includeImage, includeFloat bool) (*[]SimpleAsset, error) {
 	wear := getWearTierName(wearTier)
 	marketName := formatMarketName(name, wear, isStatTrak)
 
@@ -142,64 +153,83 @@ func (client *Client) NewAsset(name string, wearTier int, isStatTrak bool) *Simp
 		},
 	}
 
+	// Returns a page of commmunity market listings for the given asset.
 	marketListing, err := client.GetMarketListing(simpleAsset.EncodedName)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	if len(marketListing.Assets) == 0 {
-		return nil
+		return nil, err
 	}
 
 	if len(marketListing.ListingInfo) == 0 {
-		return nil
+		return nil, err
 	}
 
-	// Get unknown ClassID from market listing.
+	// Get market pricing averages for listing.
+	if includePrice {
+		err = simpleAsset.GetPriceSummary()
+		if err != nil {
+			log.Printf("failed get price summary: %s", err)
+		}
+	}
+
+	// The ClassID is unique ID of each listing, which we do not know until
+	// it is returned in the listing summary.
 	classID := ""
-	for k := range marketListing.Assets[client.CSGOAppID]["2"] {
-		classID = k
-	}
 
-	err = simpleAsset.GetPriceSummary()
-	if err != nil {
-		log.Fatalf("failed get price summary: %s", err)
-	}
+	// Create an empty simple asset for each listing.
+	assetListing := SimpleAsset{}
 
-	simpleAsset.ID = marketListing.Assets[client.CSGOAppID]["2"][classID].ID
-	simpleAsset.ClassID = classID
-	simpleAsset.ContextID = marketListing.Assets[client.CSGOAppID]["2"][classID].ContextID
-	simpleAsset.InstanceID = marketListing.Assets[client.CSGOAppID]["2"][classID].InstanceID
-	simpleAsset.Quality.Type = marketListing.Assets[client.CSGOAppID]["2"][classID].Type
+	// The list of simple asset listings to return at the end.
+	simpleAssetList := []SimpleAsset{}
 
-	for _, action := range marketListing.Assets[client.CSGOAppID]["2"][classID].MarketActions {
-		if action.Name == "Inspect in Game..." {
-			simpleAsset.InspectURL = parseInspectURL(simpleAsset.ID, action.Link)
-		}
-	}
+	// Loop through each asset listing, the key being the ClassID.
+	for cID, listing := range marketListing.Assets[client.CSGOAppID]["2"] {
+		classID = cID
 
-	// icon_url not useful if screenshot image included.
-	// if marketListing.Assets[client.CSGOAppID]["2"][classID].IconURLLarge != "" {
-	// 	simpleAsset.IconURL += fmt.Sprintf(client.CDNBaseURL + marketListing.Assets[client.CSGOAppID]["2"][classID].IconURLLarge)
-	// }
+		// Fill out the basic asset info that is the same for each listing.
+		assetListing = simpleAsset
 
-	if simpleAsset.InspectURL != "" {
-		assetFloat, err := float.Get(simpleAsset.InspectURL)
-		if err != nil {
-			log.Fatalf("failed get price summary: %s", err)
+		assetListing.ClassID = classID
+		assetListing.ID = listing.ID
+		assetListing.ContextID = listing.ContextID
+		assetListing.InstanceID = listing.InstanceID
+		assetListing.Quality.Type = listing.Type
+
+		for _, action := range listing.MarketActions {
+			if action.Name == "Inspect in Game..." {
+				assetListing.InspectURL = parseInspectURL(assetListing.ID, action.Link)
+			}
 		}
 
-		simpleAsset.Float = assetFloat.ItemInfo
+		// icon_url not useful if screenshot image included.
+		// if marketListing.Assets[client.CSGOAppID]["2"][classID].IconURLLarge != "" {
+		// 	simpleAsset.IconURL += fmt.Sprintf(client.CDNBaseURL + marketListing.Assets[client.CSGOAppID]["2"][classID].IconURLLarge)
+		// }
 
-		screenshotURL, err := image.GetScreenshot(simpleAsset.InspectURL)
-		if err != nil {
-			log.Fatalf("failed to get screenshot: %s", err)
+		if assetListing.InspectURL != "" {
+			if includeFloat {
+				assetFloat, err := float.Get(assetListing.InspectURL)
+				if err != nil {
+					log.Printf("failed get price summary: %s", err)
+				}
+				assetListing.Float = assetFloat.ItemInfo
+			}
+
+			if includeImage {
+				screenshotURL, err := image.GetScreenshot(assetListing.InspectURL)
+				if err != nil {
+					log.Printf("failed to get screenshot: %s", err)
+				}
+				assetListing.ScreenshotURL = screenshotURL
+			}
 		}
-
-		simpleAsset.ScreenshotURL = screenshotURL
+		simpleAssetList = append(simpleAssetList, assetListing)
 	}
 
-	return &simpleAsset
+	return &simpleAssetList, err
 }
 
 // getAssetPrices returns a list of asset prices for a given AppId.
@@ -375,6 +405,28 @@ func parseInspectURL(assetID, rawInspectURL string) string {
 	inspectURLJoined += mID + aID + dID
 
 	return inspectURLJoined
+}
+
+// CheckForRarity loops through floats for market listings and highlights any
+// standout values.
+func CheckForRarity(assetList []SimpleAsset) []string {
+	notableListings := []string{}
+	for _, asset := range assetList {
+		if rarePaintSeed(asset.Float.PaintSeed) {
+			notableListings = append(notableListings, asset.ID)
+		}
+	}
+	return notableListings
+}
+
+// rarePaintSeed checks whether a seed exists in a list of rare ones.
+func rarePaintSeed(seed int) bool {
+	for _, rareSeed := range rarePaintSeeds {
+		if seed == rareSeed {
+			return true
+		}
+	}
+	return false
 }
 
 // ListAssets prints assets in a list.
