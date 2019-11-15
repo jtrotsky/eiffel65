@@ -12,26 +12,25 @@ import (
 const (
 	defaultAssetName string = "AK-47 | Case Hardened"
 	defaultWearTier  int    = 3
+	defaultListings  int    = 25
 )
 
 var (
-	assetName    string
-	steamAPIKey  string
-	wearTier     int
-	statTrak     bool
-	includePrice bool
-	includeImage bool
-	includeFloat bool
+	assetName   string
+	steamAPIKey string
+	wearTier    int
+	listings    int
+	statTrak    bool
+	debug       bool
 )
 
 func init() {
 	flag.StringVar(&assetName, "n", defaultAssetName, "the name of the Steam asset to query")
 	flag.StringVar(&steamAPIKey, "k", "", "the user Steam Web API Key")
 	flag.IntVar(&wearTier, "w", defaultWearTier, "what wear quality to query")
+	flag.IntVar(&listings, "l", defaultListings, "how many market listings, default 25")
 	flag.BoolVar(&statTrak, "s", false, "whether to query items with StatTrak")
-	flag.BoolVar(&includePrice, "p", false, "whether to a market price summary")
-	flag.BoolVar(&includeImage, "i", false, "whether to include an image URL from metjm")
-	flag.BoolVar(&includeFloat, "f", false, "whether to include float info from csgofloat.com")
+	flag.BoolVar(&debug, "d", false, "debug mode")
 	flag.Parse()
 }
 
@@ -46,7 +45,7 @@ func main() {
 
 	steamClient := steam.NewClient(steamAPIKey)
 
-	assetList, err := steamClient.NewAsset(assetName, wearTier, statTrak, includePrice, includeImage, includeFloat)
+	assetList, err := steamClient.NewAsset(assetName, wearTier, listings, statTrak, debug)
 	if err != nil {
 		log.Fatalf("Failed to get asset listings %s", err)
 	}
@@ -63,8 +62,9 @@ func main() {
 	notableIDs := steam.CheckForRarity(*assetList)
 	highlight := ""
 	if len(notableIDs) > 0 {
-		for _, id := range notableIDs {
-			highlight += fmt.Sprintf("\nHIGHLIGHT: %s", id)
+		for id, asset := range notableIDs {
+			highlight += fmt.Sprintf("\nHIGHLIGHT: %s SEED: %d PRICE: %s%s SCREENSHOT: %s",
+				id, asset.Float.PaintSeed, asset.ListingTotalPrice, asset.ListingCurrency, asset.ScreenshotURL)
 		}
 	}
 

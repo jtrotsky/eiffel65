@@ -3,13 +3,12 @@ package float
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 )
 
 const (
-	csgoFloatBaseURL string = "https://api.csgofloat.com:1738/"
+	csgoFloatBaseURL string = "https://api.csgofloat.com/"
 )
 
 // AssetFloatPayload contains the payload of data on asset quality and appearance.
@@ -48,25 +47,25 @@ type Sticker struct {
 }
 
 // Get looks up the asset paint/design quality.
-func Get(inspectURL string) (*AssetFloatPayload, error) {
+func Get(inspectURL string) (*AssetFloatPayload, string, error) {
 	csgoFloatURL, err := url.Parse(fmt.Sprintf("%s?url=%s", csgoFloatBaseURL, inspectURL))
 	if err != nil {
-		return nil, err
+		return nil, csgoFloatURL.String(), err
 	}
 
-	log.Println(csgoFloatURL)
+	//log.Println(csgoFloatURL)
 
 	response, err := http.DefaultClient.Get(csgoFloatURL.String())
 	if err != nil {
-		return nil, err
+		return nil, csgoFloatURL.String(), err
 	}
 	defer response.Body.Close()
 
 	assetFloatPayload := AssetFloatPayload{}
 	err = json.NewDecoder(response.Body).Decode(&assetFloatPayload)
 	if err != nil {
-		return nil, err
+		return nil, csgoFloatURL.String(), err
 	}
 
-	return &assetFloatPayload, nil
+	return &assetFloatPayload, csgoFloatURL.String(), nil
 }
