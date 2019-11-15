@@ -113,23 +113,23 @@ type Tag struct {
 
 // SimpleAsset is a simple version of Asset.
 type SimpleAsset struct {
-	ID                string           `json:"id,omitempty"`
-	ClassID           string           `json:"class_id,omitempty"`
-	ContextID         string           `json:"context_id,omitempty"`
-	InstanceID        string           `json:"instance_id,omitempty"`
-	Name              string           `json:"name,omitempty"`
-	EncodedName       string           `json:"encoded_name,omitempty"`
-	IconURL           string           `json:"icon_url,omitempty"`
-	InspectURL        string           `json:"inspect_url,omitempty"`
-	ScreenshotURL     string           `json:"screenshot_url,omitempty"`
-	ListingCurrency   string           `json:"listing_currency,omitempty"`
-	ListingPrice      string           `json:"listing_price,omitempty"`
-	ListingFee        string           `json:"listing_fee,omitempty"`
-	ListingTotalPrice string           `json:"listing_total_price,omitempty"`
-	Type              AssetType        `json:"type,omitempty"`
-	MarketValue       AssetValue       `json:"market_value,omitempty"`
-	Quality           AssetQuality     `json:"quality,omitempty"`
-	Float             float.AssetFloat `json:"float,omitempty"`
+	ID                string    `json:"id,omitempty"`
+	ClassID           string    `json:"class_id,omitempty"`
+	ContextID         string    `json:"context_id,omitempty"`
+	InstanceID        string    `json:"instance_id,omitempty"`
+	Name              string    `json:"name,omitempty"`
+	EncodedName       string    `json:"encoded_name,omitempty"`
+	IconURL           string    `json:"icon_url,omitempty"`
+	InspectURL        string    `json:"inspect_url,omitempty"`
+	ScreenshotURL     string    `json:"screenshot_url,omitempty"`
+	ListingCurrency   string    `json:"listing_currency,omitempty"`
+	ListingPrice      string    `json:"listing_price,omitempty"`
+	ListingFee        string    `json:"listing_fee,omitempty"`
+	ListingTotalPrice string    `json:"listing_total_price,omitempty"`
+	Type              AssetType `json:"type,omitempty"`
+	//MarketValue       AssetValue       `json:"market_value,omitempty"`
+	Quality AssetQuality     `json:"quality,omitempty"`
+	Float   float.AssetFloat `json:"float,omitempty"`
 }
 
 // AssetQuality is the weapon condition and rarity.
