@@ -2,7 +2,6 @@ package steam
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,7 +15,6 @@ const (
 	marketCountry       string = "us"
 	marketCurrency      string = "1" // USD (https://github.com/SteamRE/SteamKit/blob/master/Resources/SteamLanguage/enums.steamd#L855).
 	marketDataFormat    string = "json"
-	marketPageSize      int    = 25
 	marketStartingIndex int    = 0
 
 	pathPriceOverview string = "market/priceoverview"
@@ -36,8 +34,8 @@ type MarketListing struct {
 // Listing contains information specific to the market listing such as its price.
 type Listing struct {
 	ID    string      `json:"listingid,omitempty"`
-	Price int64       `json:"price,omitempty"`
-	Fee   int64       `json:"fee,omitempty"`
+	Price int         `json:"price,omitempty"`
+	Fee   int         `json:"fee,omitempty"`
 	Asset MarketAsset `json:"asset,omitempty"`
 }
 
@@ -58,7 +56,7 @@ type MarketAction struct {
 }
 
 // GetMarketListing returns info about an asset listed on the Steam market.
-func (client *Client) GetMarketListing(encodedName string) (*MarketListing, error) {
+func (client *Client) GetMarketListing(encodedName string, listings int, debug bool) (*MarketListing, error) {
 	marketListingURL, err := url.Parse(fmt.Sprintf("%s/%s/%s/%s/render", marketBaseURL, pathMarketListing, csgoAppID, encodedName))
 	if err != nil {
 		return nil, err
@@ -66,7 +64,7 @@ func (client *Client) GetMarketListing(encodedName string) (*MarketListing, erro
 
 	params := url.Values{}
 	params.Add("start", strconv.Itoa(marketStartingIndex))
-	params.Add("count", strconv.Itoa(marketPageSize))
+	params.Add("count", strconv.Itoa(listings))
 	params.Add("currency", marketCurrency)
 	params.Add("language", marketLanguage)
 	params.Add("format", marketDataFormat)
@@ -74,7 +72,9 @@ func (client *Client) GetMarketListing(encodedName string) (*MarketListing, erro
 	marketListingURL.RawQuery = params.Encode()
 
 	// DEBUG
-	log.Println(marketListingURL)
+	if debug {
+		log.Println(marketListingURL)
+	}
 
 	response, err := http.DefaultClient.Get(marketListingURL.String())
 	if err != nil {
@@ -92,7 +92,7 @@ func (client *Client) GetMarketListing(encodedName string) (*MarketListing, erro
 }
 
 // GetPriceSummary returns basic market price statistics for a given asset.
-func (asset *SimpleAsset) GetPriceSummary() error {
+func (asset *SimpleAsset) GetPriceSummary(debug bool) error {
 	assetPriceURL, err := url.Parse(fmt.Sprintf("%s/%s", marketBaseURL, pathPriceOverview))
 	if err != nil {
 		return err
@@ -108,17 +108,15 @@ func (asset *SimpleAsset) GetPriceSummary() error {
 	assetPriceURL.RawQuery += fmt.Sprintf("&market_hash_name=%s", asset.EncodedName)
 
 	// DEBUG
-	log.Println(assetPriceURL)
+	if debug {
+		log.Println(assetPriceURL)
+	}
 
 	response, err := http.DefaultClient.Get(assetPriceURL.String())
 	if err != nil {
 		return err
 	}
 	defer response.Body.Close()
-
-	if response.ContentLength <= 2 {
-		return errors.New("failed to get asset price summary")
-	}
 
 	err = json.NewDecoder(response.Body).Decode(&asset.MarketValue)
 	if err != nil {
