@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/jtrotsky/eiffel65/float"
@@ -42,9 +43,11 @@ const (
 // https://files.opskins.media/file/opskins-patternindex/7_44_179.jpg
 // https://files.opskins.media/file/opskins-patternindex/7_44_321.jpg
 //
-// Blue magazine
 // https://files.opskins.media/file/opskins-patternindex/7_44_464.jpg
-var rarePaintSeeds = []int{29, 151, 179, 321, 464, 561, 661, 670, 760, 955}
+var (
+	ak47RarePaintSeeds     = []int{29, 151, 179, 321, 464, 561, 661, 670, 760, 955}
+	falchionRarePaintSeeds = []int{149, 302, 494, 811, 917}
+)
 
 // AssetWear is how assets are categorised by quality based on their
 // appearance.
@@ -110,19 +113,23 @@ type Tag struct {
 
 // SimpleAsset is a simple version of Asset.
 type SimpleAsset struct {
-	ID            string           `json:"id,omitempty"`
-	ClassID       string           `json:"class_id,omitempty"`
-	ContextID     string           `json:"context_id,omitempty"`
-	InstanceID    string           `json:"instance_id,omitempty"`
-	Name          string           `json:"name,omitempty"`
-	EncodedName   string           `json:"encoded_name,omitempty"`
-	IconURL       string           `json:"icon_url,omitempty"`
-	InspectURL    string           `json:"inspect_url,omitempty"`
-	ScreenshotURL string           `json:"screenshot_url,omitempty"`
-	Type          AssetType        `json:"type,omitempty"`
-	MarketValue   AssetValue       `json:"market_value,omitempty"`
-	Quality       AssetQuality     `json:"quality,omitempty"`
-	Float         float.AssetFloat `json:"float,omitempty"`
+	ID                string           `json:"id,omitempty"`
+	ClassID           string           `json:"class_id,omitempty"`
+	ContextID         string           `json:"context_id,omitempty"`
+	InstanceID        string           `json:"instance_id,omitempty"`
+	Name              string           `json:"name,omitempty"`
+	EncodedName       string           `json:"encoded_name,omitempty"`
+	IconURL           string           `json:"icon_url,omitempty"`
+	InspectURL        string           `json:"inspect_url,omitempty"`
+	ScreenshotURL     string           `json:"screenshot_url,omitempty"`
+	ListingCurrency   string           `json:"listing_currency,omitempty"`
+	ListingPrice      string           `json:"listing_price,omitempty"`
+	ListingFee        string           `json:"listing_fee,omitempty"`
+	ListingTotalPrice string           `json:"listing_total_price,omitempty"`
+	Type              AssetType        `json:"type,omitempty"`
+	MarketValue       AssetValue       `json:"market_value,omitempty"`
+	Quality           AssetQuality     `json:"quality,omitempty"`
+	Float             float.AssetFloat `json:"float,omitempty"`
 }
 
 // AssetQuality is the weapon condition and rarity.
@@ -140,7 +147,7 @@ type AssetValue struct {
 }
 
 // NewAsset creates an asset instance.
-func (client *Client) NewAsset(name string, wearTier int, isStatTrak, includePrice, includeImage, includeFloat bool) (*[]SimpleAsset, error) {
+func (client *Client) NewAsset(name string, wearTier, listings int, isStatTrak, debug bool) (*[]SimpleAsset, error) {
 	wear := getWearTierName(wearTier)
 	marketName := formatMarketName(name, wear, isStatTrak)
 
@@ -154,7 +161,7 @@ func (client *Client) NewAsset(name string, wearTier int, isStatTrak, includePri
 	}
 
 	// Returns a page of commmunity market listings for the given asset.
-	marketListing, err := client.GetMarketListing(simpleAsset.EncodedName)
+	marketListing, err := client.GetMarketListing(simpleAsset.EncodedName, listings, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -168,12 +175,10 @@ func (client *Client) NewAsset(name string, wearTier int, isStatTrak, includePri
 	}
 
 	// Get market pricing averages for listing.
-	if includePrice {
-		err = simpleAsset.GetPriceSummary()
-		if err != nil {
-			log.Printf("failed get price summary: %s", err)
-		}
-	}
+	// err = simpleAsset.GetPriceSummary(debug)
+	// if err != nil {
+	// 	log.Printf("failed get price summary: %s", err)
+	// }
 
 	// The ClassID is unique ID of each listing, which we do not know until
 	// it is returned in the listing summary.
@@ -198,6 +203,9 @@ func (client *Client) NewAsset(name string, wearTier int, isStatTrak, includePri
 		assetListing.InstanceID = listing.InstanceID
 		assetListing.Quality.Type = listing.Type
 
+		// Pricing from listing
+		//assetListing.ListingPrice = marketListing.ListingInfo[].Listing
+
 		for _, action := range listing.MarketActions {
 			if action.Name == "Inspect in Game..." {
 				assetListing.InspectURL = parseInspectURL(assetListing.ID, action.Link)
@@ -210,22 +218,41 @@ func (client *Client) NewAsset(name string, wearTier int, isStatTrak, includePri
 		// }
 
 		if assetListing.InspectURL != "" {
-			if includeFloat {
-				assetFloat, err := float.Get(assetListing.InspectURL)
-				if err != nil {
-					log.Printf("failed get price summary: %s", err)
-				}
-				assetListing.Float = assetFloat.ItemInfo
+			assetFloat, floatURL, err := float.Get(assetListing.InspectURL)
+			if err != nil {
+				log.Printf("failed get price summary: %s", err)
+				break
 			}
 
-			if includeImage {
-				screenshotURL, err := image.GetScreenshot(assetListing.InspectURL)
-				if err != nil {
-					log.Printf("failed to get screenshot: %s", err)
-				}
-				assetListing.ScreenshotURL = screenshotURL
+			if debug {
+				log.Println(floatURL)
+			}
+
+			assetListing.Float = assetFloat.ItemInfo
+
+			screenshotURL, err := image.BuildURL(assetListing.Float.DefIndex, assetListing.Float.PaintIndex, assetListing.Float.PaintSeed, assetListing.InspectURL)
+			if err != nil {
+				log.Printf("failed to get screenshot: %s", err)
+			}
+
+			if debug {
+				log.Println(screenshotURL)
+			}
+
+			assetListing.ScreenshotURL = screenshotURL
+		}
+
+		for _, listing := range marketListing.ListingInfo {
+			if listing.Asset.ID == assetListing.ID {
+				listingPriceFloat := float64(listing.Price) / 100
+				listingFeeFloat := float64(listing.Fee) / 100
+				assetListing.ListingPrice = strconv.FormatFloat(listingPriceFloat, 'f', 2, 64)
+				assetListing.ListingFee = strconv.FormatFloat(listingFeeFloat, 'f', 2, 64)
+				assetListing.ListingCurrency = "USD"
+				assetListing.ListingTotalPrice = strconv.FormatFloat(listingPriceFloat+listingFeeFloat, 'f', 2, 64)
 			}
 		}
+
 		simpleAssetList = append(simpleAssetList, assetListing)
 	}
 
@@ -351,7 +378,7 @@ func formatMarketName(baseName string, wear AssetWear, isStatTrak bool) string {
 }
 
 // Transform converts a raw Steam asset into a simplified one.
-func (asset *Asset) Transform() (*SimpleAsset, error) {
+func (asset *Asset) Transform(debug bool) (*SimpleAsset, error) {
 	assetSimple := SimpleAsset{}
 
 	assetSimple.Name = asset.MarketName
@@ -372,12 +399,12 @@ func (asset *Asset) Transform() (*SimpleAsset, error) {
 		fmt.Println(asset.Type)
 	}
 
-	err := assetSimple.GetPriceSummary()
-	if err != nil {
-		return nil, err
-	}
+	// err := assetSimple.GetPriceSummary(debug)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	return &assetSimple, err
+	return &assetSimple, nil
 }
 
 // parseInspectURL takes a raw inspect URL and converts it to one that can be
@@ -412,7 +439,7 @@ func parseInspectURL(assetID, rawInspectURL string) string {
 func CheckForRarity(assetList []SimpleAsset) []string {
 	notableListings := []string{}
 	for _, asset := range assetList {
-		if rarePaintSeed(asset.Float.PaintSeed) {
+		if rarePaintSeed(asset.Float.DefIndex, asset.Float.PaintSeed) {
 			notableListings = append(notableListings, asset.ID)
 		}
 	}
@@ -420,11 +447,22 @@ func CheckForRarity(assetList []SimpleAsset) []string {
 }
 
 // rarePaintSeed checks whether a seed exists in a list of rare ones.
-func rarePaintSeed(seed int) bool {
-	for _, rareSeed := range rarePaintSeeds {
-		if seed == rareSeed {
-			return true
+func rarePaintSeed(defIndex, seed int) bool {
+	switch defIndex {
+	case 512:
+		for _, rareSeed := range falchionRarePaintSeeds {
+			if seed == rareSeed {
+				return true
+			}
 		}
+		return false
+	case 7:
+		for _, rareSeed := range ak47RarePaintSeeds {
+			if seed == rareSeed {
+				return true
+			}
+		}
+		return false
 	}
 	return false
 }
