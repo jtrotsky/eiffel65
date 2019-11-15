@@ -8,7 +8,7 @@ By default it will look up the AK-47 Case Hardened.
 ### Command Line Flags
 ```
 -k Your Steam API Key
--w The Weapon Wear (1-5 Battle-Scarred to Factory New, default 3) 
+-w The Weapon Wear (1-5 Factory New to Battle-Scarred, default 3) 
 -s StatTrak or not (Default not)
 -n The name of another item (default "AK-47 | Case Hardened")
 -d Debug mode
