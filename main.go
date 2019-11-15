@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/jtrotsky/eiffel65/steam"
 )
@@ -21,6 +22,7 @@ var (
 	wearTier    int
 	listings    int
 	statTrak    bool
+	localbrowse bool
 	debug       bool
 )
 
@@ -30,6 +32,7 @@ func init() {
 	flag.IntVar(&wearTier, "w", defaultWearTier, "what wear quality to query")
 	flag.IntVar(&listings, "l", defaultListings, "how many market listings, default 25")
 	flag.BoolVar(&statTrak, "s", false, "whether to query items with StatTrak")
+	flag.BoolVar(&localbrowse, "x", false, "browser mode")
 	flag.BoolVar(&debug, "d", false, "debug mode")
 	flag.Parse()
 }
@@ -68,5 +71,14 @@ func main() {
 		}
 	}
 
-	fmt.Printf("%s\n\n%s", assetJSON, highlight)
+	if localbrowse {
+		http.HandleFunc("/", handler)
+		log.Fatal(http.ListenAndServe(":8080", nil))
+	} else {
+		fmt.Printf("%s\n\n%s", assetJSON, highlight)
+	}
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Welcome", r.URL.Path[1:])
 }
