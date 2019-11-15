@@ -34,8 +34,8 @@ type MarketListing struct {
 // Listing contains information specific to the market listing such as its price.
 type Listing struct {
 	ID    string      `json:"listingid,omitempty"`
-	Price int         `json:"price,omitempty"`
-	Fee   int         `json:"fee,omitempty"`
+	Price int         `json:"converted_price,omitempty"`
+	Fee   int         `json:"converted_fee,omitempty"`
 	Asset MarketAsset `json:"asset,omitempty"`
 }
 

@@ -46,7 +46,13 @@ const (
 // https://files.opskins.media/file/opskins-patternindex/7_44_464.jpg
 var (
 	ak47RarePaintSeeds     = []int{29, 151, 179, 321, 464, 561, 661, 670, 760, 955}
-	falchionRarePaintSeeds = []int{149, 302, 494, 811, 917}
+	falchionRarePaintSeeds = []int{4, 10, 11, 13, 14, 20, 25, 27, 29, 30, 32, 34,
+		38, 42, 46, 55, 56, 58, 61, 67, 73, 74, 79, 82, 91, 92, 98, 103, 106, 109,
+		112, 115, 116, 126, 128, 129, 130, 136, 137, 138, 139, 144, 146, 147, 148,
+		149, 151, 152, 155, 157, 166, 168, 169, 170, 171, 175, 176, 177, 179, 180, 182,
+		187, 188, 189, 191, 194, 199, 202, 203, 205, 207, 208, 210, 212, 213, 214,
+		216, 217, 222, 225, 226, 228, 230, 231, 233, 235, 236, 237, 238, 239, 241,
+		243, 244, 245, 246, 248, 251, 302, 494, 764, 811, 917}
 )
 
 // AssetWear is how assets are categorised by quality based on their
@@ -122,6 +128,7 @@ type SimpleAsset struct {
 	IconURL           string    `json:"icon_url,omitempty"`
 	InspectURL        string    `json:"inspect_url,omitempty"`
 	ScreenshotURL     string    `json:"screenshot_url,omitempty"`
+	ListingID         string    `json:"listing_id,omitempty"`
 	ListingCurrency   string    `json:"listing_currency,omitempty"`
 	ListingPrice      string    `json:"listing_price,omitempty"`
 	ListingFee        string    `json:"listing_fee,omitempty"`
@@ -242,14 +249,18 @@ func (client *Client) NewAsset(name string, wearTier, listings int, isStatTrak, 
 			assetListing.ScreenshotURL = screenshotURL
 		}
 
-		for _, listing := range marketListing.ListingInfo {
+		for listingID, listing := range marketListing.ListingInfo {
 			if listing.Asset.ID == assetListing.ID {
+				assetListing.ListingID = listingID
+
 				listingPriceFloat := float64(listing.Price) / 100
 				listingFeeFloat := float64(listing.Fee) / 100
+
 				assetListing.ListingPrice = strconv.FormatFloat(listingPriceFloat, 'f', 2, 64)
 				assetListing.ListingFee = strconv.FormatFloat(listingFeeFloat, 'f', 2, 64)
-				assetListing.ListingCurrency = "USD"
 				assetListing.ListingTotalPrice = strconv.FormatFloat(listingPriceFloat+listingFeeFloat, 'f', 2, 64)
+
+				assetListing.ListingCurrency = "USD"
 			}
 		}
 
@@ -436,11 +447,11 @@ func parseInspectURL(assetID, rawInspectURL string) string {
 
 // CheckForRarity loops through floats for market listings and highlights any
 // standout values.
-func CheckForRarity(assetList []SimpleAsset) []string {
-	notableListings := []string{}
+func CheckForRarity(assetList []SimpleAsset) map[string]SimpleAsset {
+	notableListings := map[string]SimpleAsset{}
 	for _, asset := range assetList {
 		if rarePaintSeed(asset.Float.DefIndex, asset.Float.PaintSeed) {
-			notableListings = append(notableListings, asset.ID)
+			notableListings[asset.ID] = asset
 		}
 	}
 	return notableListings

@@ -62,8 +62,9 @@ func main() {
 	notableIDs := steam.CheckForRarity(*assetList)
 	highlight := ""
 	if len(notableIDs) > 0 {
-		for _, id := range notableIDs {
-			highlight += fmt.Sprintf("\nHIGHLIGHT: %s", id)
+		for id, asset := range notableIDs {
+			highlight += fmt.Sprintf("\nHIGHLIGHT: %s SEED: %d PRICE: %s%s SCREENSHOT: %s",
+				id, asset.Float.PaintSeed, asset.ListingTotalPrice, asset.ListingCurrency, asset.ScreenshotURL)
 		}
 	}
 
