@@ -11,9 +11,7 @@ By default it will look up the AK-47 Case Hardened.
 -w The Weapon Wear (1-5 Battle-Scarred to Factory New, default 3) 
 -s StatTrak or not (Default not)
 -n The name of another item (default "AK-47 | Case Hardened")
--p Include average Steam Market pricing for this asset in the payload.
--i Include an image of this asset in the payload from metjm.
--f Include float values for this asset in the payload from csgofloat.
+-d Debug mode
 ```
 
 #### Example Command
@@ -22,50 +20,34 @@ By default it will look up the AK-47 Case Hardened.
 ### Example Response
 ```
 {
-	"id": "14514261975",
-	"class_id": "14514261975",
+	"id": "17159513973",
+	"class_id": "17159513973",
 	"context_id": "2",
 	"instance_id": "188530139",
-	"name": "AK-47 | Case Hardened (Well-Worn)",
-	"encoded_name": "AK-47%20%7C%20Case%20Hardened%20%28Well-Worn%29",
-	"inspect_url": "steam://rungame/730/76561202255233023/+csgo_econ_action_preview%20M1930235607424827122A14514261975D11962722264411186581",
-	"screenshot_url": "https://s.metjm.net/rZXWhox.jpg",
+	"name": "★ Falchion Knife | Case Hardened (Field-Tested)",
+	"encoded_name": "%E2%98%85%20Falchion%20Knife%20%7C%20Case%20Hardened%20%28Field-Tested%29",
+	"inspect_url": "steam://rungame/730/76561202255233023/+csgo_econ_action_preview%20M1959557655465026857A17159513973D5047488674414879876",
+	"screenshot_url": "https://files.opskins.media/file/opskins-patternindex/512_44_970.jpg",
+	"listing_currency": "USD",
+	"listing_price": "98.29",
+	"listing_fee": "14.73",
+	"listing_total_price": "113.02",
 	"type": "weapon",
-	"market_value": {
-		"currency": "USD",
-		"lowest_price": "$22.84",
-		"median_price": "$22.73",
-		"volume": "16"
-	},
+	"market_value": {},
 	"quality": {
-		"wear": "Well-Worn",
-		"type": "Classified Rifle"
+		"wear": "Field-Tested",
+		"type": "★ Covert Knife"
 	},
 	"float": {
-		"defindex": 7,
+		"defindex": 512,
 		"paintindex": 44,
-		"rarity": 5,
-		"quality": 4,
-		"paintwear": 1054644235,
-		"paintseed": 500,
-		"stickers": [
-			{
-				"sticker_id": 154,
-				"codename": "cologne2014_esl_a",
-				"name": "ESL One Cologne 2014 (Blue)"
-			},
-			{
-				"slot": 1,
-				"sticker_id": 371,
-				"codename": "chi_bomb",
-				"name": "Chi Bomb"
-			}
-		],
-		"inventory": 3221225475,
+		"rarity": 6,
+		"quality": 3,
+		"paintseed": 970,
+		"inventory": 3221225482,
 		"origin": 8,
-		"floatvalue": 0.43084749579429626,
-		"itemid_int": 14514261975,
-		"weapon_type": "AK-47",
+		"floatvalue": 0.21138329803943634,
+		"weapon_type": "Falchion Knife",
 		"item_name": "Case Hardened"
 	}
 }

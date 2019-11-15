@@ -91,43 +91,43 @@ func (client *Client) GetMarketListing(encodedName string, listings int, debug b
 	return &marketListing, err
 }
 
-// GetPriceSummary returns basic market price statistics for a given asset.
-func (asset *SimpleAsset) GetPriceSummary(debug bool) error {
-	assetPriceURL, err := url.Parse(fmt.Sprintf("%s/%s", marketBaseURL, pathPriceOverview))
-	if err != nil {
-		return err
-	}
+// // GetPriceSummary returns basic market price statistics for a given asset.
+// func (asset *SimpleAsset) GetPriceSummary(debug bool) error {
+// 	assetPriceURL, err := url.Parse(fmt.Sprintf("%s/%s", marketBaseURL, pathPriceOverview))
+// 	if err != nil {
+// 		return err
+// 	}
 
-	params := url.Values{}
-	params.Add("format", marketDataFormat)
-	params.Add("country", marketCountry)
-	params.Add("currency", marketCurrency)
-	params.Add("appid", csgoAppID)
-	assetPriceURL.RawQuery = params.Encode()
+// 	params := url.Values{}
+// 	params.Add("format", marketDataFormat)
+// 	params.Add("country", marketCountry)
+// 	params.Add("currency", marketCurrency)
+// 	params.Add("appid", csgoAppID)
+// 	assetPriceURL.RawQuery = params.Encode()
 
-	assetPriceURL.RawQuery += fmt.Sprintf("&market_hash_name=%s", asset.EncodedName)
+// 	assetPriceURL.RawQuery += fmt.Sprintf("&market_hash_name=%s", asset.EncodedName)
 
-	// DEBUG
-	if debug {
-		log.Println(assetPriceURL)
-	}
+// 	// DEBUG
+// 	if debug {
+// 		log.Println(assetPriceURL)
+// 	}
 
-	response, err := http.DefaultClient.Get(assetPriceURL.String())
-	if err != nil {
-		return err
-	}
-	defer response.Body.Close()
+// 	response, err := http.DefaultClient.Get(assetPriceURL.String())
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer response.Body.Close()
 
-	err = json.NewDecoder(response.Body).Decode(&asset.MarketValue)
-	if err != nil {
-		return err
-	}
+// 	err = json.NewDecoder(response.Body).Decode(&asset.MarketValue)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	if marketCurrency == "1" {
-		asset.MarketValue.Currency = "USD"
-	} else {
-		asset.MarketValue.Currency = "?"
-	}
+// 	if marketCurrency == "1" {
+// 		asset.MarketValue.Currency = "USD"
+// 	} else {
+// 		asset.MarketValue.Currency = "?"
+// 	}
 
-	return err
-}
+// 	return err
+// }
