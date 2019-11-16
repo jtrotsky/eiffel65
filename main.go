@@ -29,7 +29,7 @@ var (
 func init() {
 	flag.StringVar(&assetName, "n", defaultAssetName, "the name of the Steam asset to query")
 	flag.StringVar(&steamAPIKey, "k", "", "the user Steam Web API Key")
-	flag.IntVar(&wearTier, "w", defaultWearTier, "what wear quality to query")
+	flag.IntVar(&wearTier, "w", defaultWearTier, "what wear quality to query (1-5 Factory New to Battle-Scarred, default 3)")
 	flag.IntVar(&listings, "l", defaultListings, "how many market listings, default 25")
 	flag.BoolVar(&statTrak, "s", false, "whether to query items with StatTrak")
 	flag.BoolVar(&localbrowse, "x", false, "browser mode")
