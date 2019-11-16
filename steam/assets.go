@@ -119,10 +119,10 @@ type Tag struct {
 
 // SimpleAsset is a simple version of Asset.
 type SimpleAsset struct {
-	ID                string    `json:"id,omitempty"`
-	ClassID           string    `json:"class_id,omitempty"`
-	ContextID         string    `json:"context_id,omitempty"`
-	InstanceID        string    `json:"instance_id,omitempty"`
+	ID string `json:"id,omitempty"`
+	// ClassID string `json:"class_id,omitempty"`
+	// ContextID         string    `json:"context_id,omitempty"`
+	// InstanceID        string    `json:"instance_id,omitempty"`
 	Name              string    `json:"name,omitempty"`
 	EncodedName       string    `json:"encoded_name,omitempty"`
 	IconURL           string    `json:"icon_url,omitempty"`
@@ -181,15 +181,9 @@ func (client *Client) NewAsset(name string, wearTier, listings int, isStatTrak, 
 		return nil, err
 	}
 
-	// Get market pricing averages for listing.
-	// err = simpleAsset.GetPriceSummary(debug)
-	// if err != nil {
-	// 	log.Printf("failed get price summary: %s", err)
-	// }
-
 	// The ClassID is unique ID of each listing, which we do not know until
 	// it is returned in the listing summary.
-	classID := ""
+	// classID := ""
 
 	// Create an empty simple asset for each listing.
 	assetListing := SimpleAsset{}
@@ -199,15 +193,15 @@ func (client *Client) NewAsset(name string, wearTier, listings int, isStatTrak, 
 
 	// Loop through each asset listing, the key being the ClassID.
 	for cID, listing := range marketListing.Assets[client.CSGOAppID]["2"] {
-		classID = cID
+		// classID = cID
 
 		// Fill out the basic asset info that is the same for each listing.
 		assetListing = simpleAsset
 
-		assetListing.ClassID = classID
-		assetListing.ID = listing.ID
-		assetListing.ContextID = listing.ContextID
-		assetListing.InstanceID = listing.InstanceID
+		assetListing.ID = cID
+		// assetListing.ID = listing.ID
+		// assetListing.ContextID = listing.ContextID
+		// assetListing.InstanceID = listing.InstanceID
 		assetListing.Quality.Type = listing.Type
 
 		// Pricing from listing
@@ -218,11 +212,6 @@ func (client *Client) NewAsset(name string, wearTier, listings int, isStatTrak, 
 				assetListing.InspectURL = parseInspectURL(assetListing.ID, action.Link)
 			}
 		}
-
-		// icon_url not useful if screenshot image included.
-		// if marketListing.Assets[client.CSGOAppID]["2"][classID].IconURLLarge != "" {
-		// 	simpleAsset.IconURL += fmt.Sprintf(client.CDNBaseURL + marketListing.Assets[client.CSGOAppID]["2"][classID].IconURLLarge)
-		// }
 
 		if assetListing.InspectURL != "" {
 			assetFloat, floatURL, err := float.Get(assetListing.InspectURL)
@@ -338,19 +327,11 @@ func (client *Client) GetAsset(classID string) (*Asset, error) {
 
 	asset := Asset{}
 	for k, v := range payload.Result {
-		// TODO check if success is false.
-		// if k == "success" {
-		// 	if v.(bool) == false {
-		// 		return nil, errors.New("failed to get asset")
-		// 	}
-		// }
-
 		if k == classID {
 			err := json.Unmarshal(v, &asset)
 			if err != nil {
 				return nil, errors.New("failed to unmarshal asset")
 			}
-
 			return &asset, nil
 		}
 	}
@@ -409,11 +390,6 @@ func (asset *Asset) Transform(debug bool) (*SimpleAsset, error) {
 	default:
 		fmt.Println(asset.Type)
 	}
-
-	// err := assetSimple.GetPriceSummary(debug)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	return &assetSimple, nil
 }
@@ -477,49 +453,3 @@ func rarePaintSeed(defIndex, seed int) bool {
 	}
 	return false
 }
-
-// ListAssets prints assets in a list.
-// func (client *Client) ListAssets(apiKey string) error {
-// 	assetPayload, err := client.getAssetPrices()
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	assetList := []SimpleAsset{}
-// 	count := 0
-// 	for _, assetValue := range assetPayload.Result.Assets {
-// 		log.Printf("getting: %s", assetValue.ClassID)
-
-// 		asset, err := client.GetAsset(assetValue.ClassID)
-// 		if err != nil {
-// 			log.Println(err)
-// 		}
-
-// 		simpleAsset, err := asset.Transform()
-// 		if err != nil {
-// 			log.Println(err)
-// 		}
-
-// 		// if simpleAsset.Type != "weapon" {
-// 		// 	log.Println("type not weapon")
-
-// 		// 	continue
-// 		// }
-
-// 		count++
-
-// 		assetList = append(assetList, *simpleAsset)
-// 		if count == 10 {
-// 			break
-// 		}
-// 	}
-
-// 	assetJSON, err := json.MarshalIndent(assetList, "", "\t")
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	fmt.Printf("%s\n", assetJSON)
-
-// 	return err
-// }

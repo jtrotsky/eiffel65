@@ -53,8 +53,6 @@ func Get(inspectURL string) (*AssetFloatPayload, string, error) {
 		return nil, csgoFloatURL.String(), err
 	}
 
-	//log.Println(csgoFloatURL)
-
 	response, err := http.DefaultClient.Get(csgoFloatURL.String())
 	if err != nil {
 		return nil, csgoFloatURL.String(), err

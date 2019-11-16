@@ -91,7 +91,7 @@ func (client *Client) GetMarketListing(encodedName string, listings int, debug b
 	return &marketListing, err
 }
 
-// // GetPriceSummary returns basic market price statistics for a given asset.
+// GetPriceSummary returns basic market price statistics for a given asset.
 // func (asset *SimpleAsset) GetPriceSummary(debug bool) error {
 // 	assetPriceURL, err := url.Parse(fmt.Sprintf("%s/%s", marketBaseURL, pathPriceOverview))
 // 	if err != nil {
