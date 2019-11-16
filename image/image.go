@@ -16,7 +16,5 @@ func BuildURL(defIndex, paintIndex, paintSeed int, inspectURL string) (string, e
 
 	screenshotURL.Path += fmt.Sprintf("%d_%d_%d.jpg", defIndex, paintIndex, paintSeed)
 
-	//log.Println(screenshotURL)
-
 	return screenshotURL.String(), nil
 }

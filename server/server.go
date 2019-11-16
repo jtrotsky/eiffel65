@@ -16,28 +16,25 @@ const (
 	defaultNumberOfListings int    = 25
 )
 
-// Config contains configuration details
+// Config contains configuration details and search arguments
 type Config struct {
 	SteamAPIKey      string
 	NumberOfListings int
 	Debug            bool
-	//
-	AssetName string
-	WearTier  int
-	StatTrak  bool
+	AssetName        string
+	WearTier         int
+	StatTrak         bool
 }
 
 var config = &Config{
 	SteamAPIKey:      "",
 	NumberOfListings: defaultNumberOfListings,
-	//
-	AssetName: defaultAssetName,
-	WearTier:  defaultWearTier,
-	StatTrak:  false,
+	AssetName:        defaultAssetName,
+	WearTier:         defaultWearTier,
+	StatTrak:         false,
 }
 
 func getConfig(config *Config) {
-
 	flag.StringVar(&config.AssetName, "n", defaultAssetName, "the name of the Steam asset to query")
 	flag.StringVar(&config.SteamAPIKey, "k", "", "the user Steam Web API Key")
 	flag.IntVar(&config.WearTier, "w", defaultWearTier, "what wear quality to query")
@@ -60,18 +57,23 @@ func Start() error {
 	}
 
 	http.HandleFunc("/", indexHandler)
+	http.HandleFunc("/favicon.ico", faviconHandler)
 	http.HandleFunc("/listings", listingsHandler)
 
 	return http.ListenAndServe(":8080", nil)
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	templates, err := template.ParseFiles("server/templates/index.html")
+	templates, err := template.ParseFiles("public/index.html")
 	if err != nil {
 		log.Println("failed to parse html templates")
 	}
 
 	templates.ExecuteTemplate(w, "index.html", nil)
+}
+
+func faviconHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "public/favicon.ico")
 }
 
 func listingsHandler(w http.ResponseWriter, r *http.Request) {
