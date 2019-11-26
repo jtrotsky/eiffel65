@@ -66,8 +66,8 @@ func main() {
 	highlight := ""
 	if len(notableIDs) > 0 {
 		for id, asset := range notableIDs {
-			highlight += fmt.Sprintf("\nHIGHLIGHT: %s SEED: %d PRICE: %s%s SCREENSHOT: %s",
-				id, asset.Float.PaintSeed, asset.ListingTotalPrice, asset.ListingCurrency, asset.ScreenshotURL)
+			highlight += fmt.Sprintf("\nHIGHLIGHT: %s SEED: %d FLOAT: %.4f PRICE: %s%s SCREENSHOT: %s",
+				id, asset.Float.PaintSeed, asset.Float.FloatValue, asset.ListingTotalPrice, asset.ListingCurrency, asset.ScreenshotURL)
 		}
 	}
 
