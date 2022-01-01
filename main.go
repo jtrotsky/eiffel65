@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/jtrotsky/eiffel65/steam"
 )
@@ -22,7 +21,6 @@ var (
 	wearTier    int
 	listings    int
 	statTrak    bool
-	localbrowse bool
 	debug       bool
 )
 
@@ -31,19 +29,18 @@ func init() {
 	flag.StringVar(&steamAPIKey, "k", "", "the user Steam Web API Key")
 	flag.IntVar(&wearTier, "w", defaultWearTier, "what wear quality to query (1-5 Factory New to Battle-Scarred, default 3)")
 	flag.IntVar(&listings, "l", defaultListings, "how many market listings, default 25")
-	flag.BoolVar(&statTrak, "s", false, "whether to query items with StatTrak")
-	flag.BoolVar(&localbrowse, "x", false, "browser mode")
+	flag.BoolVar(&statTrak, "s", false, "include items with StatTrak")
 	flag.BoolVar(&debug, "d", false, "debug mode")
 	flag.Parse()
 }
 
 func main() {
 	if steamAPIKey == "" {
-		log.Fatal("please specify an API Key")
+		log.Fatal("please specify an API Key with -k flag")
 	}
 
 	if wearTier > 5 || wearTier < 1 {
-		log.Fatal("please specify a wear tear between 1 and 5")
+		log.Fatal("please specify a wear tear between 1 and 5 with -w flag")
 	}
 
 	steamClient := steam.NewClient(steamAPIKey)
@@ -71,14 +68,5 @@ func main() {
 		}
 	}
 
-	if localbrowse {
-		http.HandleFunc("/", handler)
-		log.Fatal(http.ListenAndServe(":8080", nil))
-	} else {
-		fmt.Printf("%s\n\n%s", assetJSON, highlight)
-	}
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome", r.URL.Path[1:])
+	fmt.Printf("%s\n\n%s", assetJSON, highlight)
 }
