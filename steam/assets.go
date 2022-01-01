@@ -76,28 +76,28 @@ type AssetPayloadResult struct {
 
 // Asset is an item on the Steam market.
 type Asset struct {
-	ID                string         `json:"id,omitempty"`
-	ClassID           string         `json:"classid,omitempty"`
-	ContextID         string         `json:"contextid,omitempty"`
-	InstanceID        string         `json:"instanceid,omitempty"`
-	Name              string         `json:"name,omitempty"`
-	Type              string         `json:"type,omitempty"`
-	IconURL           string         `json:"icon_url,omitempty"`       // Prefaced by CDN URL.
-	IconURLLarge      string         `json:"icon_url_large,omitempty"` // Prefaced by CDN URL.
-	IconDragURL       string         `json:"icon_drag_url,omitempty"`  // Prefaced by CDN URL.
-	MarketHashName    string         `json:"market_hash_name,omitempty"`
-	MarketName        string         `json:"market_name,omitempty"`
-	NameColor         string         `json:"name_color,omitempty"`
-	BGColor           string         `json:"background_color,omitempty"`
-	Tradable          int            `json:"tradable,omitempty"`
-	Marketable        int            `json:"marketable,omitempty"`
-	Commodity         int            `json:"commodity,omitempty"`
-	TradeRestrict     int            `json:"market_tradeable_restriction,omitempty"`
-	FraudWarnings     []string       `json:"fraudwarnings,omitempty"`
-	OwnerDescriptions string         `json:"owner_descriptions,omitempty"`
-	MarketActions     []MarketAction `json:"market_actions,omitempty"`
-	Descriptions      []Description  `json:"descriptions,omitempty"`
-	Tags              []Tag          `json:"tags,omitempty"`
+	ID                string   `json:"id,omitempty"`
+	ClassID           string   `json:"classid,omitempty"`
+	ContextID         string   `json:"contextid,omitempty"`
+	InstanceID        string   `json:"instanceid,omitempty"`
+	Name              string   `json:"name,omitempty"`
+	Type              string   `json:"type,omitempty"`
+	IconURL           string   `json:"icon_url,omitempty"`       // Prefaced by CDN URL.
+	IconURLLarge      string   `json:"icon_url_large,omitempty"` // Prefaced by CDN URL.
+	IconDragURL       string   `json:"icon_drag_url,omitempty"`  // Prefaced by CDN URL.
+	MarketHashName    string   `json:"market_hash_name,omitempty"`
+	MarketName        string   `json:"market_name,omitempty"`
+	NameColor         string   `json:"name_color,omitempty"`
+	BGColor           string   `json:"background_color,omitempty"`
+	Tradable          int      `json:"tradable,omitempty"`
+	Marketable        int      `json:"marketable,omitempty"`
+	Commodity         int      `json:"commodity,omitempty"`
+	TradeRestrict     int      `json:"market_tradeable_restriction,omitempty"`
+	FraudWarnings     []string `json:"fraudwarnings,omitempty"`
+	OwnerDescriptions string   `json:"owner_descriptions,omitempty"`
+	// MarketActions     []MarketAction `json:"market_actions,omitempty"`
+	Descriptions []Description `json:"descriptions,omitempty"`
+	Tags         []Tag         `json:"tags,omitempty"`
 }
 
 // Description contains asset description data
@@ -198,7 +198,7 @@ func (client *Client) NewAsset(name string, wearTier, listings int, isStatTrak, 
 	simpleAssetList := []SimpleAsset{}
 
 	// Loop through each asset listing, the key being the ClassID.
-	for cID, listing := range marketListing.Assets[client.CSGOAppID]["2"] {
+	for cID, listing := range marketListing.Assets[client.CSGOApplicationID]["2"] {
 		classID = cID
 
 		// Fill out the basic asset info that is the same for each listing.
@@ -280,7 +280,7 @@ func (client *Client) getAssetPrices() (*AssetPayload, error) {
 	params := url.Values{}
 	params.Add("currency", marketCurrency)
 	params.Add("language", marketLanguage)
-	params.Add("appid", csgoAppID)
+	params.Add("appid", CSGOApplicationID)
 	params.Add("key", client.APIKey)
 	assetPricesURL.RawQuery = params.Encode()
 
@@ -314,7 +314,7 @@ func (client *Client) GetAsset(classID string) (*Asset, error) {
 	// params.Add("instanceid0", instanceid) // Optional
 	params.Add("class_count", "1") // Number of classes specified.
 	params.Add("classid0", classID)
-	params.Add("appid", csgoAppID)
+	params.Add("appid", CSGOApplicationID)
 	params.Add("key", client.APIKey)
 	assetInfoURL.RawQuery = params.Encode()
 
@@ -384,7 +384,7 @@ func formatMarketName(baseName string, wear AssetWear, isStatTrak bool) string {
 		marketName = statTrak + " "
 	}
 
-	marketName += baseName + " " + "(" + string(wear) + ")"
+	marketName += "%22" + baseName + " " + "(" + string(wear) + ")" + "%22"
 	return marketName
 }
 
