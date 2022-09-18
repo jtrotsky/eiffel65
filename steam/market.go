@@ -23,9 +23,9 @@ const (
 
 // MarketListing is an item listed on the Steam market.
 type MarketListing struct {
-	PageSize   string `json:"pagesize,omitempty"`
-	TotalCount int    `json:"total_count,omitempty"`
-	Start      int    `json:"start,omitempty"`
+	PageSize   int `json:"pagesize,omitempty"`
+	TotalCount int `json:"total_count,omitempty"`
+	Start      int `json:"start,omitempty"`
 
 	ListingInfo map[string]Listing                     `json:"listinginfo,omitempty"`
 	Assets      map[string]map[string]map[string]Asset `json:"assets,omitempty"`
