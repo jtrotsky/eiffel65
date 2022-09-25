@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	defaultAssetName string = "AK-47 | Case Hardened"
+	// defaultAssetName string = "AK-47 | Case Hardened"
+	defaultAssetName string = "Case Hardened"
 	defaultWearTier  int    = 3
 	defaultListings  int    = 25
 )
@@ -28,8 +29,8 @@ var (
 
 func init() {
 	flag.StringVar(&assetName, "n", defaultAssetName, "the name of the Steam asset to query")
-	flag.StringVar(&steamAPIKey, "k", "", "the user Steam Web API Key")
-	flag.IntVar(&wearTier, "w", defaultWearTier, "what wear quality to query (1-5 Factory New to Battle-Scarred, default 3)")
+	flag.StringVar(&steamAPIKey, "k", "", "Steam Web API Key")
+	flag.IntVar(&wearTier, "w", defaultWearTier, "what weapon wear quality: 1 is Factory New, 5 is Battle-Scarred, the default 3 Field-Tested")
 	flag.IntVar(&listings, "l", defaultListings, "how many market listings, default 25")
 	flag.BoolVar(&statTrak, "s", false, "whether to query items with StatTrak")
 	flag.BoolVar(&localbrowse, "x", false, "browser mode")
@@ -39,27 +40,31 @@ func init() {
 
 func main() {
 	if steamAPIKey == "" {
-		log.Fatal("please specify an API Key")
+		log.Fatal("please specify an API Key with -k")
 	}
 
-	if wearTier > 5 || wearTier < 1 {
-		log.Fatal("please specify a wear tear between 1 and 5")
+	switch {
+	case wearTier < 1:
+		wearTier = 1
+	case wearTier > 5:
+		wearTier = 5
+	default:
 	}
 
-	steamClient := steam.NewClient(steamAPIKey)
+	steamClient := steam.NewClient(steamAPIKey, debug)
 
-	assetList, err := steamClient.NewAsset(assetName, wearTier, listings, statTrak, debug)
+	assetList, err := steamClient.NewAsset(assetName, wearTier, listings, statTrak)
 	if err != nil {
-		log.Fatalf("Failed to get asset listings %s", err)
+		log.Fatal(err)
 	}
 
 	if assetList == nil {
-		log.Fatalf("No results for %s", assetName)
+		log.Fatal(err)
 	}
 
 	assetJSON, err := json.MarshalIndent(assetList, "", "\t")
 	if err != nil {
-		log.Fatalf("failed to marshal listing JSON: %s", err)
+		log.Fatal(err)
 	}
 
 	notableIDs := steam.CheckForRarity(*assetList)
@@ -80,5 +85,5 @@ func main() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome", r.URL.Path[1:])
+	fmt.Fprintf(w, "Welcome %s", r.URL.Path[1:])
 }

@@ -13,14 +13,16 @@ type Client struct {
 	CSGOAppID  string
 	CDNBaseURL string
 	APIBaseURL string
+	Debug      bool
 }
 
 // NewClient initiates a Steam client.
-func NewClient(apiKey string) *Client {
+func NewClient(apiKey string, debug bool) *Client {
 	return &Client{
 		APIKey:     apiKey,
 		CSGOAppID:  csgoAppID,
 		CDNBaseURL: steamImageCDNBaseURL,
 		APIBaseURL: steamAPIBaseURL,
+		Debug:      debug,
 	}
 }

@@ -19,6 +19,7 @@ const (
 
 	pathPriceOverview string = "market/priceoverview"
 	pathMarketListing string = "market/listings"
+	pathMarketSearch  string = "market/search/render"
 )
 
 // MarketListing is an item listed on the Steam market.
@@ -56,23 +57,26 @@ type MarketAction struct {
 }
 
 // GetMarketListing returns info about an asset listed on the Steam market.
-func (client *Client) GetMarketListing(encodedName string, listings int, debug bool) (*MarketListing, error) {
-	marketListingURL, err := url.Parse(fmt.Sprintf("%s/%s/%s/%s/render", marketBaseURL, pathMarketListing, csgoAppID, encodedName))
+func (client *Client) GetMarketListing(encodedName string, listings int) (*MarketListing, error) {
+	// https://steamcommunity.com/market/search/render/?appid=730&currency=2&query=AK-47%20%7C%20Case%20Hardened%20%28Battle-Scarred%29&norender=1&count=25
+	marketListingURL, err := url.Parse(fmt.Sprintf("%s/%s/", marketBaseURL, pathMarketSearch))
 	if err != nil {
 		return nil, err
 	}
 
+	// https://steamcommunity.com/market/search/render/?appid=730&count=25&currency=1&norender=1&query=Case%2520Hardened%25&start=0&category_730_Type%5B%5D=tag_CSGO_Type_Rifle
 	params := url.Values{}
 	params.Add("start", strconv.Itoa(marketStartingIndex))
 	params.Add("count", strconv.Itoa(listings))
 	params.Add("currency", marketCurrency)
-	params.Add("language", marketLanguage)
-	params.Add("format", marketDataFormat)
 	params.Add("appid", csgoAppID)
+	params.Add("query", encodedName)
+	params.Add("norender", "1") // return json instead of html
+	params.Add("category_730_Type%5B%5D", "tag_CSGO_Type_Rifle")
 	marketListingURL.RawQuery = params.Encode()
 
 	// DEBUG
-	if debug {
+	if client.Debug {
 		log.Println(marketListingURL)
 	}
 
