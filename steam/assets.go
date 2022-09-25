@@ -154,7 +154,7 @@ type AssetValue struct {
 }
 
 // NewAsset creates an asset instance.
-func (client *Client) NewAsset(name string, wearTier, listings int, isStatTrak, debug bool) (*[]SimpleAsset, error) {
+func (client *Client) NewAsset(name string, wearTier, listings int, isStatTrak bool) (*[]SimpleAsset, error) {
 	wear := getWearTierName(wearTier)
 	marketName := formatMarketName(name, wear, isStatTrak)
 
@@ -168,7 +168,7 @@ func (client *Client) NewAsset(name string, wearTier, listings int, isStatTrak, 
 	}
 
 	// Returns a page of commmunity market listings for the given asset.
-	marketListing, err := client.GetMarketListing(simpleAsset.EncodedName, listings, debug)
+	marketListing, err := client.GetMarketListing(simpleAsset.EncodedName, listings)
 	if err != nil {
 		return nil, err
 	}
@@ -181,14 +181,6 @@ func (client *Client) NewAsset(name string, wearTier, listings int, isStatTrak, 
 		return nil, err
 	}
 
-	// Get market pricing averages for listing.
-	// err = simpleAsset.GetPriceSummary(debug)
-	// if err != nil {
-	// 	log.Printf("failed get price summary: %s", err)
-	// }
-
-	// The ClassID is unique ID of each listing, which we do not know until
-	// it is returned in the listing summary.
 	classID := ""
 
 	// Create an empty simple asset for each listing.
@@ -231,7 +223,7 @@ func (client *Client) NewAsset(name string, wearTier, listings int, isStatTrak, 
 				break
 			}
 
-			if debug {
+			if client.Debug {
 				log.Println(floatURL)
 			}
 
@@ -242,7 +234,7 @@ func (client *Client) NewAsset(name string, wearTier, listings int, isStatTrak, 
 				log.Printf("failed to get screenshot: %s", err)
 			}
 
-			if debug {
+			if client.Debug {
 				log.Println(screenshotURL)
 			}
 
@@ -271,37 +263,37 @@ func (client *Client) NewAsset(name string, wearTier, listings int, isStatTrak, 
 }
 
 // getAssetPrices returns a list of asset prices for a given AppId.
-func (client *Client) getAssetPrices() (*AssetPayload, error) {
-	assetPricesURL, err := url.Parse(fmt.Sprintf("%s/%s", steamAPIBaseURL, pathAssetPrices))
-	if err != nil {
-		return nil, err
-	}
+// func (client *Client) getAssetPrices() (*AssetPayload, error) {
+// 	assetPricesURL, err := url.Parse(fmt.Sprintf("%s/%s", steamAPIBaseURL, pathAssetPrices))
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	params := url.Values{}
-	params.Add("currency", marketCurrency)
-	params.Add("language", marketLanguage)
-	params.Add("appid", csgoAppID)
-	params.Add("key", client.APIKey)
-	assetPricesURL.RawQuery = params.Encode()
+// 	params := url.Values{}
+// 	params.Add("currency", marketCurrency)
+// 	params.Add("language", marketLanguage)
+// 	params.Add("appid", csgoAppID)
+// 	params.Add("key", client.APIKey)
+// 	assetPricesURL.RawQuery = params.Encode()
 
-	response, err := http.DefaultClient.Get(assetPricesURL.String())
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
+// 	response, err := http.DefaultClient.Get(assetPricesURL.String())
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer response.Body.Close()
 
-	assetPayload := AssetPayload{}
-	err = json.NewDecoder(response.Body).Decode(&assetPayload)
-	if err != nil {
-		return nil, err
-	}
+// 	assetPayload := AssetPayload{}
+// 	err = json.NewDecoder(response.Body).Decode(&assetPayload)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	if assetPayload.Result.Success != true {
-		return nil, errors.New("failed getting asset price list")
-	}
+// 	if !assetPayload.Result.Success {
+// 		return nil, errors.New("failed getting asset price list")
+// 	}
 
-	return &assetPayload, err
-}
+// 	return &assetPayload, err
+// }
 
 // GetAsset returns information about an individual item from the Steam market.
 func (client *Client) GetAsset(classID string) (*Asset, error) {
@@ -431,11 +423,11 @@ func parseInspectURL(assetID, rawInspectURL string) string {
 	inspectURLTrimmed = strings.TrimSuffix(inspectURLTrimmed, inspectURLTrimmed[d:])
 
 	a := strings.Index(inspectURLTrimmed, "A")
-	aID := inspectURLTrimmed[a:]
+	// aID := inspectURLTrimmed[a:]
 
 	inspectURLTrimmed = strings.TrimSuffix(inspectURLTrimmed, inspectURLTrimmed[a:])
 
-	aID = "A" + assetID
+	aID := "A" + assetID
 
 	m := strings.Index(inspectURLTrimmed, "M")
 	mID := inspectURLTrimmed[m:]

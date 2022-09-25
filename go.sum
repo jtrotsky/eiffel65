@@ -1,4 +1,2 @@
 github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/jtrotsky/eiffel65 v0.0.0-20191126222502-18509a254545 h1:TN2o6/8FFDdUsNeIUCrp6XS6bzjwgM9pM08VDFbc2VE=
-github.com/jtrotsky/eiffel65 v0.0.0-20191126222502-18509a254545/go.mod h1:KEdpZTf7w4urVe6yqCzfnNCaBJEc06JfiG4wSeDIwcA=
