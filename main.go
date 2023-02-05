@@ -1,19 +1,11 @@
 package main
 
 import (
+	"eiffel65/steam"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
-
-	"github.com/jtrotsky/eiffel65/steam"
-)
-
-const (
-	defaultAssetName string = "AK-47 | Case Hardened"
-	defaultWearTier  int    = 3
-	defaultListings  int    = 25
 )
 
 var (
@@ -22,17 +14,21 @@ var (
 	wearTier    int
 	listings    int
 	statTrak    bool
-	localbrowse bool
 	debug       bool
+)
+
+const (
+	defaultWearTier     int    = 3
+	defaultListingCount int    = 25
+	defaultAssetName    string = "AK-47 | Case Hardened"
 )
 
 func init() {
 	flag.StringVar(&assetName, "n", defaultAssetName, "the name of the Steam asset to query")
 	flag.StringVar(&steamAPIKey, "k", "", "the user Steam Web API Key")
 	flag.IntVar(&wearTier, "w", defaultWearTier, "what wear quality to query (1-5 Factory New to Battle-Scarred, default 3)")
-	flag.IntVar(&listings, "l", defaultListings, "how many market listings, default 25")
+	flag.IntVar(&listings, "l", defaultListingCount, "how many market listings, default 25")
 	flag.BoolVar(&statTrak, "s", false, "whether to query items with StatTrak")
-	flag.BoolVar(&localbrowse, "x", false, "browser mode")
 	flag.BoolVar(&debug, "d", false, "debug mode")
 	flag.Parse()
 }
@@ -50,11 +46,11 @@ func main() {
 
 	assetList, err := steamClient.NewAsset(assetName, wearTier, listings, statTrak, debug)
 	if err != nil {
-		log.Fatalf("Failed to get asset listings %s", err)
+		log.Fatalf("failed to get asset listings for %s", err)
 	}
 
 	if assetList == nil {
-		log.Fatalf("No results for %s", assetName)
+		log.Fatalf("no results for %s", assetName)
 	}
 
 	assetJSON, err := json.MarshalIndent(assetList, "", "\t")
@@ -71,14 +67,5 @@ func main() {
 		}
 	}
 
-	if localbrowse {
-		http.HandleFunc("/", handler)
-		log.Fatal(http.ListenAndServe(":8080", nil))
-	} else {
-		fmt.Printf("%s\n\n%s", assetJSON, highlight)
-	}
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome", r.URL.Path[1:])
+	fmt.Printf("%s\n\n%s", assetJSON, highlight)
 }
