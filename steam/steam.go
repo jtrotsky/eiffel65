@@ -20,15 +20,15 @@ const (
 	steamImageCDNBaseURL    string    = "https://steamcommunity-a.akamaihd.net/economy/image/"
 	steamImageCDNBaseURLOld string    = "https://cdn.steamcommunity.com/economy/image/"
 	marketBaseURL           string    = "https://steamcommunity.com"
+	priceOverviewPath       string    = "market/priceoverview"
+	marketListingPath       string    = "market/listings"
 	marketLanguage          string    = "en_US"
 	marketCountry           string    = "uk"
-	marketCurrency          string    = "2" // GBP, enums: https://github.com/SteamRE/SteamKit/blob/master/Resources/SteamLanguage/enums.steamd#L855
 	marketDataFormat        string    = "json"
+	marketCurrency          string    = "2" // GBP, enums: https://github.com/SteamRE/SteamKit/blob/master/Resources/SteamLanguage/enums.steamd#L855
 	marketStartingIndex     int       = 0
 	marketDefaultPageSize   int       = 25
 	marketMaxPageSize       int       = 100
-	pathPriceOverview       string    = "market/priceoverview"
-	pathMarketListing       string    = "market/listings"
 	statTrak                string    = "StatTrak™"
 	factoryNew              AssetWear = "Factory New"
 	minimalWear             AssetWear = "Minimal Wear"
@@ -116,85 +116,6 @@ func NewClient(apiKey string) *Client {
 		CDNBaseURL: steamImageCDNBaseURL,
 		APIBaseURL: steamAPIBaseURL,
 	}
-}
-
-// GetMarketListing returns info about an asset listed on the Steam market.
-func (client *Client) GetMarketListing(encodedName string, listings int, debug bool) (*MarketListing, error) {
-	marketListingURL, err := url.Parse(fmt.Sprintf("%s/%s/%s/%s/render", marketBaseURL, pathMarketListing, csgoAppID, encodedName))
-	if err != nil {
-		return nil, err
-	}
-
-	params := url.Values{}
-
-	if listings > marketDefaultPageSize {
-		params.Add("count", strconv.Itoa(marketMaxPageSize))
-	} else if listings != 0 {
-		params.Add("count", strconv.Itoa(listings))
-	}
-
-	params.Add("currency", marketCurrency)
-	params.Add("format", marketDataFormat)
-	params.Add("appid", csgoAppID)
-	marketListingURL.RawQuery = params.Encode()
-
-	// DEBUG
-	if debug {
-		log.Println(marketListingURL)
-	}
-
-	response, err := http.DefaultClient.Get(marketListingURL.String())
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
-
-	switch response.StatusCode {
-	case 400:
-		return nil, fmt.Errorf("HTTP: %d , something failed", response.StatusCode)
-	case 401:
-		return nil, fmt.Errorf("HTTP: %d , unauthorised check token is valid", response.StatusCode)
-	case 403:
-		return nil, fmt.Errorf("HTTP: %d , forbidden check token permissions", response.StatusCode)
-	case 404:
-		return nil, fmt.Errorf("HTTP: %d , something failed", response.StatusCode)
-	case 429:
-		return nil, fmt.Errorf("HTTP: %d , rate limited", response.StatusCode)
-	case 500:
-		return nil, fmt.Errorf("HTTP: %d , something failed steam side", response.StatusCode)
-	}
-
-	marketListing := MarketListing{}
-	err = json.NewDecoder(response.Body).Decode(&marketListing)
-	if err != nil {
-		return nil, err
-	}
-
-	if debug {
-		fmt.Println(marketListing.TotalCount, len(marketListing.Assets))
-	}
-
-	if marketListing.TotalCount > marketMaxPageSize {
-		params.Add("start", strconv.Itoa(marketMaxPageSize+1))
-		// DEBUG
-		if debug {
-			log.Println(marketListingURL)
-		}
-
-		response, err := http.DefaultClient.Get(marketListingURL.String())
-		if err != nil {
-			return nil, err
-		}
-		defer response.Body.Close()
-
-		err = json.NewDecoder(response.Body).Decode(&marketListing)
-		if err != nil {
-			return nil, err
-		}
-
-	}
-
-	return &marketListing, err
 }
 
 // AssetWear is how assets are categorised by quality based on their
@@ -294,6 +215,85 @@ type AssetValue struct {
 	Volume      string `json:"volume,omitempty"`
 }
 
+// GetMarketListing returns info about an asset listed on the Steam market.
+func (client *Client) GetMarketListing(encodedName string, listings int, debug bool) (*MarketListing, error) {
+	marketListingURL, err := url.Parse(fmt.Sprintf("%s/%s/%s/%s/render", marketBaseURL, marketListingPath, csgoAppID, encodedName))
+	if err != nil {
+		return nil, err
+	}
+
+	params := url.Values{}
+
+	if listings > marketDefaultPageSize {
+		params.Add("count", strconv.Itoa(marketMaxPageSize))
+	} else if listings != 0 {
+		params.Add("count", strconv.Itoa(listings))
+	}
+
+	params.Add("currency", "2")
+	params.Add("format", marketDataFormat)
+	params.Add("appid", csgoAppID)
+	marketListingURL.RawQuery = params.Encode()
+
+	// DEBUG
+	if debug {
+		log.Println(marketListingURL)
+	}
+
+	response, err := http.DefaultClient.Get(marketListingURL.String())
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	switch response.StatusCode {
+	case 400:
+		return nil, fmt.Errorf("HTTP: %d , something failed", response.StatusCode)
+	case 401:
+		return nil, fmt.Errorf("HTTP: %d , unauthorised check token is valid", response.StatusCode)
+	case 403:
+		return nil, fmt.Errorf("HTTP: %d , forbidden check token permissions", response.StatusCode)
+	case 404:
+		return nil, fmt.Errorf("HTTP: %d , something failed", response.StatusCode)
+	case 429:
+		return nil, fmt.Errorf("HTTP: %d , rate limited", response.StatusCode)
+	case 500:
+		return nil, fmt.Errorf("HTTP: %d , something failed steam side", response.StatusCode)
+	}
+
+	marketListing := MarketListing{}
+	err = json.NewDecoder(response.Body).Decode(&marketListing)
+	if err != nil {
+		return nil, err
+	}
+
+	if debug {
+		fmt.Println(marketListing.TotalCount, len(marketListing.Assets))
+	}
+
+	if marketListing.TotalCount > marketMaxPageSize {
+		params.Add("start", strconv.Itoa(marketMaxPageSize+1))
+		// DEBUG
+		if debug {
+			log.Println(marketListingURL)
+		}
+
+		response, err := http.DefaultClient.Get(marketListingURL.String())
+		if err != nil {
+			return nil, err
+		}
+		defer response.Body.Close()
+
+		err = json.NewDecoder(response.Body).Decode(&marketListing)
+		if err != nil {
+			return nil, err
+		}
+
+	}
+
+	return &marketListing, err
+}
+
 // NewAsset creates an asset instance.
 func (client *Client) NewAsset(name string, wearTier, listings int, isStatTrak, debug bool) (*[]SimpleAsset, error) {
 	wear := getWearTierName(wearTier)
@@ -357,11 +357,6 @@ func (client *Client) NewAsset(name string, wearTier, listings int, isStatTrak, 
 				assetListing.InspectURL = parseInspectURL(assetListing.ID, action.Link)
 			}
 		}
-
-		// icon_url not useful if screenshot image included.
-		// if marketListing.Assets[client.CSGOAppID]["2"][classID].IconURLLarge != "" {
-		// 	simpleAsset.IconURL += fmt.Sprintf(client.CDNBaseURL + marketListing.Assets[client.CSGOAppID]["2"][classID].IconURLLarge)
-		// }
 
 		if assetListing.InspectURL != "" {
 			assetFloat, floatURL, err := float.Get(assetListing.InspectURL)
@@ -520,8 +515,10 @@ func (asset *Asset) Transform(debug bool) (*SimpleAsset, error) {
 }
 
 // parseInspectURL takes a raw inspect URL and converts it to one that can be
-// looked up with CSGOFloat https://github.com/Step7750/CSGOFloat
+// used to create an image of the skin
+// steam://rungame/730/76561202255233023/+csgo_econ_action_preview S76561198299749713A7013114583D3180113772518061157
 func parseInspectURL(assetID, rawInspectURL string) string {
+	fmt.Println(rawInspectURL)
 	inspectURL := strings.Split(rawInspectURL, "/")
 	inspectURLTrimmed := strings.TrimPrefix(inspectURL[5], "+csgo_econ_action_preview%20")
 	inspectURLJoined := "steam://rungame/730/76561202255233023/+csgo_econ_action_preview%20"
