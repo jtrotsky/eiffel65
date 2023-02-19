@@ -517,6 +517,7 @@ func (asset *Asset) Transform(debug bool) (*SimpleAsset, error) {
 // parseInspectURL takes a raw inspect URL and converts it to one that can be
 // used to create an image of the skin
 // steam://rungame/730/76561202255233023/+csgo_econ_action_preview S76561198299749713A7013114583D3180113772518061157
+// https://p2p.bitskins.com/screenshot
 func parseInspectURL(assetID, rawInspectURL string) string {
 	fmt.Println(rawInspectURL)
 	inspectURL := strings.Split(rawInspectURL, "/")
